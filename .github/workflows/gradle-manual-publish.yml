@@ -1,0 +1,54 @@
+# DO NOT use it unless you know what are you doing
+name: Gradle Package (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      pv:
+        description: Maven package version
+        required: true
+        default: 0.0.1
+      mc_ver:
+        description: Minecraft version
+        required: true
+        default: 1.16.5
+      paper_build:
+        description: Paper version
+        required: true
+        default: "786"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # For stuff need our private packages
+      # USERNAME: ${{ secrets.SERVICE_ID }}
+      # TOKEN: ${{ secrets.SERVICE_PAT }}
+      # For stuff that doesn't need our private packages
+      USERNAME: ${{ github.actor }}
+      TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ github.event.inputs.pv }}
+      MC_VER: ${{ github.event.inputs.mc_ver }}
+      PAPER_BUILD: ${{ github.event.inputs.paper_build }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+      - name: Include Paper NMS
+        run: |
+          echo "Downloading paper nms: version: ${MC_VER} build ${PAPER_BUILD}"
+          wget -O paper.jar -q https://papermc.io/api/v2/projects/paper/versions/${MC_VER}/builds/${PAPER_BUILD}/downloads/paper-${MC_VER}-${PAPER_BUILD}.jar
+          java -Dpaperclip.install=true -jar paper.jar
+      - name: Gradle build
+        run: gradle build
+      - name: Gradle test
+        run: gradle test
+      - name: Publish to GitHub Packages
+        run: gradle publish -PpublishZgpr=true
