@@ -17,6 +17,9 @@ dependencies {
     }
     relocate("com.github.Steanky:RegularCommands:master-SNAPSHOT")
     relocate("org.apache.commons:commons-lang3:3.12.0")
+
+    bukkitPlugin("com.grinderwolf:slimeworldmanager-plugin:2.6.2-SNAPSHOT")
+    serverArtifactVerless("com.grinderwolf:slimeworldmanager-classmodifier:2.6.2-SNAPSHOT")
 }
 
 publishToZGpr()
