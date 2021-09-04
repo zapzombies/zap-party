@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * {@link java.util.function.Function}-like creator for {@link Party}s.
  */
+@FunctionalInterface
 public interface PartyCreator {
 
     /**

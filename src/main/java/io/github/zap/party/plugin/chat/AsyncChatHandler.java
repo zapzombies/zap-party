@@ -1,6 +1,5 @@
-package io.github.zap.party.chat;
+package io.github.zap.party.plugin.chat;
 
-import io.github.zap.party.Party;
 import io.github.zap.party.member.PartyMember;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.Listener;
@@ -10,14 +9,12 @@ import org.jetbrains.annotations.NotNull;
  * Handles chat from {@link PartyMember}s.
  */
 @FunctionalInterface
-public interface PartyChatHandler extends Listener {
+public interface AsyncChatHandler extends Listener {
 
     /**
      * Called when a player chats.
-     * The player does not necessarily come from the specified party and must be validated.
-     * @param party The party to check against
      * @param event The chat event
      */
-    void onAsyncChat(@NotNull Party party, AsyncChatEvent event);
+    void onAsyncChat(@NotNull AsyncChatEvent event);
 
 }

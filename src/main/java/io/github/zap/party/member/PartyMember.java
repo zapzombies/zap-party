@@ -1,6 +1,7 @@
 package io.github.zap.party.member;
 
 import io.github.zap.party.Party;
+import io.github.zap.party.plugin.chat.AsyncChatHandler;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -84,7 +85,7 @@ public class PartyMember {
 
     /**
      * Gets whether the member is muted.
-     * {@link io.github.zap.party.chat.PartyChatHandler}s should block messages if this returns {@code true}.
+     * {@link AsyncChatHandler}s should block messages if this returns {@code true}.
      * @return Whether the member is currently muted
      */
     public boolean isMuted() {

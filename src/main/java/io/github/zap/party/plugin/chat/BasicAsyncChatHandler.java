@@ -1,7 +1,8 @@
-package io.github.zap.party.chat;
+package io.github.zap.party.plugin.chat;
 
 import io.github.zap.party.Party;
 import io.github.zap.party.member.PartyMember;
+import io.github.zap.party.tracker.PartyTracker;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
@@ -16,27 +17,38 @@ import java.util.Iterator;
 import java.util.Optional;
 
 /**
- * Basic implementation of a {@link PartyChatHandler}.
+ * Basic implementation of a {@link AsyncChatHandler}.
  */
 @SuppressWarnings("ClassCanBeRecord")
-public class BasicPartyChatHandler implements PartyChatHandler {
+public class BasicAsyncChatHandler implements AsyncChatHandler {
 
     private final Plugin plugin;
+
+    private final PartyTracker partyTracker;
 
     private final MiniMessage miniMessage;
 
     /**
      * Creates a simple party chat handler that deals with parties being muted and party chat.
      * @param plugin The plugin this chat handler belongs to
+     * @param partyTracker A tracker for parties to handle {@link AsyncChatEvent}s with
      * @param miniMessage A {@link MiniMessage} instance to parse messages
      */
-    public BasicPartyChatHandler(@NotNull Plugin plugin, @NotNull MiniMessage miniMessage) {
+    public BasicAsyncChatHandler(@NotNull Plugin plugin, @NotNull PartyTracker partyTracker,
+                                 @NotNull MiniMessage miniMessage) {
         this.plugin = plugin;
+        this.partyTracker = partyTracker;
         this.miniMessage = miniMessage;
     }
 
     @Override
-    public void onAsyncChat(@NotNull Party party, AsyncChatEvent event) {
+    public void onAsyncChat(@NotNull AsyncChatEvent event) {
+        Optional<Party> partyOptional = this.partyTracker.getPartyForPlayer(event.getPlayer());
+        if (partyOptional.isEmpty()) {
+            return;
+        }
+        Party party = partyOptional.get();
+
         Optional<PartyMember> optionalPartyMember = party.getMember(event.getPlayer());
         if (optionalPartyMember.isEmpty()) {
             return;

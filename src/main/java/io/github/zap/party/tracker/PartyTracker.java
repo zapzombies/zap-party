@@ -49,9 +49,4 @@ public class PartyTracker implements Listener {
         return Optional.ofNullable(this.partyMap.get(player.getUniqueId()));
     }
 
-    @EventHandler
-    public void onAsyncChat(AsyncChatEvent event) {
-        this.getPartyForPlayer(event.getPlayer()).ifPresent(party -> party.onAsyncChat(event));
-    }
-
 }

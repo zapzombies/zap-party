@@ -1,13 +1,11 @@
 package io.github.zap.party;
 
-import io.github.zap.party.chat.PartyChatHandler;
 import io.github.zap.party.invitation.InvitationManager;
 import io.github.zap.party.list.PartyLister;
 import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.member.PartyMemberBuilder;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
-import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -51,8 +49,6 @@ public class Party {
 
     private final InvitationManager invitationManager;
 
-    private final PartyChatHandler partyChatHandler;
-
     private final PartyLister partyLister;
 
     private final OfflinePlayerNamer playerNamer;
@@ -67,33 +63,23 @@ public class Party {
      * @param partySettings The settings for the party
      * @param partyMemberBuilder A builder for new party members
      * @param invitationManager The invitation manager for this party
-     * @param partyChatHandler A chat handler for chat events
      * @param partyLister A lister for party list components
      * @param playerNamer A namer for {@link Component} names of players
      */
     public Party(@NotNull MiniMessage miniMessage, @NotNull Random random, @NotNull PartyMember owner,
                  @NotNull PartySettings partySettings, @NotNull PartyMemberBuilder partyMemberBuilder,
-                 @NotNull InvitationManager invitationManager, @NotNull PartyChatHandler partyChatHandler,
-                 @NotNull PartyLister partyLister, @NotNull OfflinePlayerNamer playerNamer) {
+                 @NotNull InvitationManager invitationManager, @NotNull PartyLister partyLister,
+                 @NotNull OfflinePlayerNamer playerNamer) {
         this.miniMessage = miniMessage;
         this.random = random;
         this.owner = owner;
         this.partySettings = partySettings;
         this.partyMemberBuilder = partyMemberBuilder;
         this.invitationManager = invitationManager;
-        this.partyChatHandler = partyChatHandler;
         this.playerNamer = playerNamer;
         this.partyLister = partyLister;
 
         this.members.put(owner.getOfflinePlayer().getUniqueId(), owner);
-    }
-
-    /**
-     * Called when this party should handle an {@link AsyncChatEvent}
-     * @param event The event
-     */
-    public void onAsyncChat(AsyncChatEvent event) {
-        this.partyChatHandler.onAsyncChat(this, event);
     }
 
     /**
@@ -150,25 +136,16 @@ public class Party {
         PartyMember removed = this.members.remove(player.getUniqueId());
         String message = (forced) ? "been removed from" : "left";
 
-        Player onlinePlayer = player.getPlayer();
-
-        Component name = (onlinePlayer != null)
-                ? onlinePlayer.displayName()
-                : this.miniMessage.parse("<gray>" + player.getName());
+        Component name = this.playerNamer.name(player);
 
         boolean clearHandlers = false;
         if (this.owner.equals(removed)) {
             chooseNewOwner();
 
             if (this.owner != null) {
-                OfflinePlayer offlineOwner = this.owner.getOfflinePlayer();
-                Player onlineOwner = offlineOwner.getPlayer();
-                Component toName = (onlineOwner != null)
-                        ? onlineOwner.displayName()
-                        : this.miniMessage.parse("<gray>" + offlineOwner.getName());
-
                 this.broadcastMessage(this.miniMessage.parse("<yellow>The party has been transferred " +
-                        "to <to><reset><yellow>.", Template.of("to", toName)));
+                        "to <to><reset><yellow>.",
+                        Template.of("to", this.playerNamer.name(this.owner.getOfflinePlayer()))));
             }
             else {
                 this.invitationManager.cancelAllOutgoingInvitations();
@@ -213,9 +190,10 @@ public class Party {
                     chooseNewOwner();
 
                     if (this.owner != null) {
-                        this.broadcastMessage(this.miniMessage.parse("<gray>" + player.getName() +
+                        this.broadcastMessage(this.miniMessage.parse("<previous>" +
                                         " <yellow>has been removed from the party. The party has been transferred to " +
                                         "<reset><owner><reset><yellow>.",
+                                Template.of("previous", this.playerNamer.name(player)),
                                 Template.of("owner", this.playerNamer.name(this.owner.getOfflinePlayer()))));
                     }
                     else {

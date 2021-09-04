@@ -1,7 +1,8 @@
 package io.github.zap.party.party;
 
 import io.github.zap.party.Party;
-import io.github.zap.party.chat.BasicPartyChatHandler;
+import io.github.zap.party.plugin.chat.AsyncChatHandler;
+import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
@@ -9,6 +10,7 @@ import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.namer.SingleTextColorOfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
+import io.github.zap.party.tracker.PartyTracker;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
@@ -38,6 +40,8 @@ public class PartyAsyncChatTest {
     private static Server server;
 
     private final MiniMessage miniMessage = MiniMessage.get();
+
+    private AsyncChatHandler asyncChatHandler;
 
     private Party party;
 
@@ -86,8 +90,11 @@ public class PartyAsyncChatTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.party = new Party(this.miniMessage, random, new PartyMember(this.owner),
                 new PartySettings(), PartyMember::new,
-                new TimedInvitationManager(plugin, this.miniMessage, playerNamer),
-                new BasicPartyChatHandler(plugin, this.miniMessage), partyLister, playerNamer);
+                new TimedInvitationManager(plugin, this.miniMessage, playerNamer), partyLister, playerNamer);
+
+        PartyTracker partyTracker = new PartyTracker();
+        partyTracker.trackParty(this.party);
+        this.asyncChatHandler = new BasicAsyncChatHandler(plugin, partyTracker, this.miniMessage);
     }
 
     @Test
@@ -96,7 +103,7 @@ public class PartyAsyncChatTest {
         Component originalMessage = Component.text("Hello, World!");
         AsyncChatEvent event = new AsyncChatEvent(true, this.noob, new HashSet<>(audiences),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
         Assertions.assertEquals(audiences, event.viewers());
@@ -111,7 +118,7 @@ public class PartyAsyncChatTest {
         AsyncChatEvent event = new AsyncChatEvent(true, member,
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
         Assertions.assertEquals(Set.of(this.owner, this.member, this.noob), event.viewers());
@@ -130,7 +137,7 @@ public class PartyAsyncChatTest {
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 ChatRenderer.defaultRenderer(), originalMessage, originalMessage);
         ChatRenderer originalRenderer = event.renderer();
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
         Assertions.assertEquals(Set.of(this.owner, this.member), event.viewers());
@@ -153,7 +160,7 @@ public class PartyAsyncChatTest {
         AsyncChatEvent event = new AsyncChatEvent(true, this.member,
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
         Assertions.assertEquals(Set.of(this.owner, this.member, this.noob), event.viewers());
@@ -181,7 +188,7 @@ public class PartyAsyncChatTest {
         AsyncChatEvent event = new AsyncChatEvent(true, this.member,
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertTrue(event.isCancelled());
         Mockito.verify(this.member, Mockito.times(counts[0] + 1))
@@ -197,7 +204,7 @@ public class PartyAsyncChatTest {
         AsyncChatEvent event = new AsyncChatEvent(true, this.member,
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
         Assertions.assertEquals(Set.of(this.owner, this.member, this.noob), event.viewers());
@@ -225,7 +232,7 @@ public class PartyAsyncChatTest {
         AsyncChatEvent event = new AsyncChatEvent(true, this.member,
                 new HashSet<>(Set.of(this.owner, this.member, this.noob)),
                 Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
-        this.party.onAsyncChat(event);
+        this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertTrue(event.isCancelled());
         Mockito.verify(this.member, Mockito.times(counts[0] + 1))

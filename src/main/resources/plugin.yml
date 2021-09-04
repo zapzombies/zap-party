@@ -1,6 +1,6 @@
 name: ${name}
 version: ${version}
-main: ${groupId}.party.PartyPlugin
+main: ${groupId}.party.plugin.PartyPlugin
 author: thamid
 api-version: 1.16
 commands:

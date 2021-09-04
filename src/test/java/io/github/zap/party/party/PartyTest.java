@@ -1,7 +1,7 @@
 package io.github.zap.party.party;
 
 import io.github.zap.party.Party;
-import io.github.zap.party.chat.BasicPartyChatHandler;
+import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
@@ -87,8 +87,7 @@ public class PartyTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.party = new Party(this.miniMessage, random, new PartyMember(this.owner),
                 new PartySettings(), PartyMember::new,
-                new TimedInvitationManager(this.plugin, this.miniMessage, playerNamer),
-                new BasicPartyChatHandler(this.plugin, this.miniMessage), partyLister, playerNamer);
+                new TimedInvitationManager(this.plugin, this.miniMessage, playerNamer), partyLister, playerNamer);
     }
 
     @Test

@@ -1,8 +1,10 @@
-package io.github.zap.party;
+package io.github.zap.party.plugin;
 
 import io.github.regularcommands.commands.CommandManager;
+import io.github.zap.party.Party;
 import io.github.zap.party.command.PartyCommand;
-import io.github.zap.party.chat.BasicPartyChatHandler;
+import io.github.zap.party.plugin.chat.AsyncChatHandler;
+import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
@@ -23,11 +25,14 @@ import java.util.Random;
 import java.util.logging.Level;
 
 /**
- * ZAP implementation of {@link PartyPlusPlus}.
+ * ZAP implementation of {@link ZAPParty}.
  */
-public class PartyPlugin extends JavaPlugin implements Listener, PartyPlusPlus {
+public class PartyPlugin extends JavaPlugin implements ZAPParty {
 
     private PartyTracker partyTracker;
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private AsyncChatHandler asyncChatHandler;
 
     @SuppressWarnings("FieldCanBeLocal")
     private CommandManager commandManager;
@@ -37,23 +42,31 @@ public class PartyPlugin extends JavaPlugin implements Listener, PartyPlusPlus {
         StopWatch timer = StopWatch.createStarted();
 
         initPartyTracker();
+        initAsyncChatEventHandler(MiniMessage.get());
         initCommands(MiniMessage.get());
-
-        Bukkit.getPluginManager().registerEvents(this, this);
 
         timer.stop();
         this.getLogger().log(Level.INFO, String.format("Enabled successfully; ~%sms elapsed.", timer.getTime()));
     }
 
     /**
-     * Initializes the party manager
+     * Initializes the {@link PartyTracker}
      */
     private void initPartyTracker() {
         this.partyTracker = new PartyTracker();
     }
 
     /**
-     * Registers the command manager
+     * Initializes the {@link AsyncChatHandler}.
+     * @param miniMessage A {@link MiniMessage} instance to parse messages
+     */
+    private void initAsyncChatEventHandler(@NotNull MiniMessage miniMessage) {
+        this.asyncChatHandler = new BasicAsyncChatHandler(this, this.partyTracker, miniMessage);
+        Bukkit.getPluginManager().registerEvents(this.asyncChatHandler, this);
+    }
+
+    /**
+     * Registers the {@link CommandManager}
      */
     private void initCommands(@NotNull MiniMessage miniMessage) {
         this.commandManager = new CommandManager(this);
@@ -67,8 +80,7 @@ public class PartyPlugin extends JavaPlugin implements Listener, PartyPlusPlus {
         this.commandManager.registerCommand(new PartyCommand(this.partyTracker,
                 owner -> new Party(miniMessage, random, new PartyMember(owner),
                         new PartySettings(), PartyMember::new,
-                        new TimedInvitationManager(this, miniMessage, playerNamer),
-                        new BasicPartyChatHandler(PartyPlugin.this, miniMessage), partyLister, playerNamer)));
+                        new TimedInvitationManager(this, miniMessage, playerNamer), partyLister, playerNamer)));
     }
 
     @Override
