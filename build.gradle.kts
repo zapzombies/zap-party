@@ -16,7 +16,7 @@ dependencies {
     relocate("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT") {
         exclude("net.kyori", "adventure-api")
     }
-    relocate("com.github.Steanky:RegularCommands:master-SNAPSHOT")
+    relocate("com.github.thamid-gamer:RegularCommands:master-SNAPSHOT")
     relocate("org.apache.commons:commons-lang3:3.12.0")
     relocate("com.ibm.icu:icu4j:69.1")
 }

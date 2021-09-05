@@ -10,6 +10,8 @@ import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.creator.PartyCreator;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -29,12 +31,15 @@ public class InvitePlayerForm extends CommandForm<Player> {
         String playerName = (String) arguments[1];
 
         if (previousData.getName().equalsIgnoreCase(playerName)) {
-            return ValidationResult.of(false, "You cannot join your own party.", null);
+            return ValidationResult.of(false,
+                    Component.translatable("io.github.zap.party.command.invite.cannotinviteown",
+                            NamedTextColor.RED), null);
         }
 
         Player player = Bukkit.getPlayer(playerName);
         if (player == null) {
-            return ValidationResult.of(false, String.format("%s is currently not online.", playerName), null);
+            return ValidationResult.of(false, Component.translatable("io.github.zap.party.command.notonline",
+                    NamedTextColor.RED, Component.text(playerName)), null);
         }
 
         return ValidationResult.of(true, null, player);
@@ -45,7 +50,7 @@ public class InvitePlayerForm extends CommandForm<Player> {
     private final PartyCreator partyCreator;
 
     public InvitePlayerForm(@NotNull PartyTracker partyTracker, @NotNull PartyCreator partyCreator) {
-        super("Invites a player to your party.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.invite.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
         this.partyCreator = partyCreator;
@@ -57,7 +62,7 @@ public class InvitePlayerForm extends CommandForm<Player> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, Player data) {
+    public Component execute(Context context, Object[] arguments, Player data) {
         Player sender = (Player) context.getSender();
 
         Party party = this.partyTracker.getPartyForPlayer(sender).orElseGet(() -> {
@@ -69,10 +74,10 @@ public class InvitePlayerForm extends CommandForm<Player> {
 
         if (party.isOwner(sender) || party.getPartySettings().isAllInvite()) {
             party.getInvitationManager().addInvitation(party, data, sender);
-            return null;
+            return Component.empty();
         }
 
-        return ">red{You do not have permission to invite players!}";
+        return Component.translatable("io.github.zap.party.command.invite.nopermission", NamedTextColor.RED);
     }
 
 }

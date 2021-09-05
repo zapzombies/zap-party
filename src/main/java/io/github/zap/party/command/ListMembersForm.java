@@ -10,6 +10,7 @@ import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,12 +29,14 @@ public class ListMembersForm extends CommandForm<Party> {
     private final CommandValidator<Party, ?> validator;
 
     public ListMembersForm(@NotNull PartyTracker partyTracker) {
-        super("Lists all members in your party.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.list.usage"), Permissions.NONE, PARAMETERS);
 
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(previousData);
             if (partyOptional.isEmpty()) {
-                return ValidationResult.of(false, "You are not currently in a party.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.sender.notinparty",
+                                NamedTextColor.RED), null);
             }
 
             return ValidationResult.of(true, null, partyOptional.get());
@@ -46,12 +49,12 @@ public class ListMembersForm extends CommandForm<Party> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, Party data) {
+    public Component execute(Context context, Object[] arguments, Party data) {
         Locale locale = ((Player) context.getSender()).locale();
         for (Component component : data.getPartyLister().getPartyListComponents(data, locale)) {
             context.getSender().sendMessage(component);
         }
-        return null;
+        return Component.empty();
     }
 
 }

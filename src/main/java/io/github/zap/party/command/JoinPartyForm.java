@@ -9,11 +9,14 @@ import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -29,36 +32,47 @@ public class JoinPartyForm extends CommandForm<Party> {
     private final CommandValidator<Party, ?> validator;
 
     public JoinPartyForm(@NotNull PartyTracker partyTracker) {
-        super("Joins a party.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.join.usage"), Permissions.NONE, PARAMETERS);
         this.validator = new CommandValidator<>(((context, arguments, previousData) -> {
             if (partyTracker.getPartyForPlayer(previousData).isPresent()) {
                 return ValidationResult.of(false,
-                        "You are already in a party! Leave it to join another one.", null);
+                        Component.translatable("io.github.zap.party.command.join.alreadyinparty",
+                                NamedTextColor.RED), null);
             }
 
             String ownerName = (String) arguments[1];
             if (previousData.getName().equalsIgnoreCase(ownerName)) {
-                return ValidationResult.of(false, "You cannot join your own party.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.join.cannotjoinown",
+                                NamedTextColor.RED), null);
             }
 
             OfflinePlayer owner = Bukkit.getOfflinePlayerIfCached(ownerName);
             if (owner == null) {
-                return ValidationResult.of(false, String.format("%s is not registered on the server!", ownerName),
-                        null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.notregistered", NamedTextColor.RED,
+                                Component.text(ownerName)), null);
             }
 
             ownerName = owner.getName(); // change any capitalization
+            Player onlinePlayer = owner.getPlayer();
+            Component ownerComponent = (onlinePlayer != null)
+                    ? onlinePlayer.displayName()
+                    : Component.text(Objects.toString(ownerName));
 
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(owner);
             if (partyOptional.isEmpty()) {
-                return ValidationResult.of(false, String.format("%s is not in a party.", ownerName), null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.notinparty", NamedTextColor.RED,
+                                ownerComponent), null);
             }
 
             Party party = partyOptional.get();
             if (!(party.getInvitationManager().hasInvitation(previousData)
                     || party.getPartySettings().isAnyoneCanJoin())) {
-                return ValidationResult.of(false, String.format("You don't have an invite to %s's party!",
-                        ownerName), null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.join.noinvite",
+                                NamedTextColor.RED, ownerComponent), null);
             }
 
             return ValidationResult.of(true, null, party);
@@ -71,9 +85,9 @@ public class JoinPartyForm extends CommandForm<Party> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, Party data) {
+    public Component execute(Context context, Object[] arguments, Party data) {
         data.addMember((Player) context.getSender());
-        return null;
+        return Component.empty();
     }
 
 }

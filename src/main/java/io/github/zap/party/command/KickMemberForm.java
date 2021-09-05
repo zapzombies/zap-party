@@ -9,10 +9,14 @@ import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -30,30 +34,37 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
     private final CommandValidator<OfflinePlayer, ?> validator;
 
     public KickMemberForm(@NotNull PartyTracker partyTracker) {
-        super("Kicks a member from your party.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.kick.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(previousData);
             if (partyOptional.isEmpty()) {
-                return ValidationResult.of(false, "You are not currently in a party.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.sender.notinparty",
+                                NamedTextColor.RED), null);
             }
 
             Party party = partyOptional.get();
 
             if (!party.isOwner(previousData)) {
-                return ValidationResult.of(false, "You are not the party owner.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.sender.notowner", NamedTextColor.RED),
+                        null);
             }
 
             String playerName = (String) arguments[1];
             if (previousData.getName().equalsIgnoreCase(playerName)) {
-                return ValidationResult.of(false, "You cannot kick yourself.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.kick.cannotkickself",
+                                NamedTextColor.RED), null);
             }
 
             OfflinePlayer toKick = Bukkit.getOfflinePlayerIfCached(playerName);
             if (toKick == null) {
-                return ValidationResult.of(false, String.format("%s is not registered on the server!", playerName),
-                        null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.notregistered",
+                                NamedTextColor.RED, Component.text(playerName)), null);
             }
 
             Optional<Party> toKickPartyOptional = partyTracker.getPartyForPlayer(toKick);
@@ -63,7 +74,14 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
                 }
             }
 
-            return ValidationResult.of(false, String.format("%s is not in your party.", playerName), null);
+            Player onlinePlayer = toKick.getPlayer();
+            Component toKickComponent = (onlinePlayer != null)
+                    ? onlinePlayer.displayName()
+                    : Component.text(Objects.toString(toKick.getName()));
+
+            return ValidationResult.of(false,
+                    Component.translatable("io.github.zap.party.command.notinyourparty",
+                            NamedTextColor.RED, toKickComponent), null);
 
         }, Validators.PLAYER_EXECUTOR);
     }
@@ -74,9 +92,9 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, OfflinePlayer data) {
+    public Component execute(Context context, Object[] arguments, OfflinePlayer data) {
         this.partyTracker.getPartyForPlayer(data).ifPresent(party -> party.removeMember(data, true));
-        return null;
+        return Component.empty();
     }
 
 }

@@ -10,6 +10,8 @@ import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,12 +26,14 @@ public class PartyChatForm extends CommandForm<Party> {
     private final CommandValidator<Party, ?> validator;
 
     public PartyChatForm(@NotNull PartyTracker partyTracker) {
-        super("Toggles party chat.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.chat.usage"), Permissions.NONE, PARAMETERS);
 
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(previousData);
             if (partyOptional.isEmpty()) {
-                return ValidationResult.of(false, "You are not currently in a party.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.sender.notinparty",
+                                NamedTextColor.RED), null);
             }
 
             return ValidationResult.of(true, null, partyOptional.get());
@@ -47,14 +51,18 @@ public class PartyChatForm extends CommandForm<Party> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, Party data) {
+    public Component execute(Context context, Object[] arguments, Party data) {
         Optional<PartyMember> partyMemberOptional = data.getMember((Player) context.getSender());
         if (partyMemberOptional.isPresent()) {
             PartyMember partyMember = partyMemberOptional.get();
             partyMember.setInPartyChat(!partyMember.isInPartyChat());
-            return String.format(">gold{Turned party chat %s!}", (partyMember.isInPartyChat()) ? "ON" : "OFF");
+            if (partyMember.isInPartyChat()) {
+                return Component.translatable("io.github.zap.party.command.chat.on", NamedTextColor.GOLD);
+            }
+
+            return Component.translatable("io.github.zap.party.command.chat.off", NamedTextColor.GOLD);
         }
 
-        return null;
+        return Component.empty();
     }
 }

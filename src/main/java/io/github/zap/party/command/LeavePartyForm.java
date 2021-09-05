@@ -9,6 +9,8 @@ import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,13 +30,15 @@ public class LeavePartyForm extends CommandForm<Void> {
     private final CommandValidator<Void, ?> validator;
 
     public LeavePartyForm(@NotNull PartyTracker partyTracker) {
-        super("Leaves your party.", Permissions.NONE, PARAMETERS);
+        super(Component.translatable("io.github.zap.party.command.leave.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> party = partyTracker.getPartyForPlayer(previousData);
             if (party.isEmpty()) {
-                return ValidationResult.of(false, "You are not currently in a party.", null);
+                return ValidationResult.of(false,
+                        Component.translatable("io.github.zap.party.command.sender.notinparty",
+                                NamedTextColor.RED), null);
             }
 
             return ValidationResult.of(true, null, null);
@@ -47,10 +51,10 @@ public class LeavePartyForm extends CommandForm<Void> {
     }
 
     @Override
-    public String execute(Context context, Object[] arguments, Void data) {
+    public Component execute(Context context, Object[] arguments, Void data) {
         OfflinePlayer sender = (OfflinePlayer) context.getSender();
         this.partyTracker.getPartyForPlayer(sender).ifPresent(party -> party.removeMember(sender, false));
-        return null;
+        return Component.empty();
     }
 
 }
