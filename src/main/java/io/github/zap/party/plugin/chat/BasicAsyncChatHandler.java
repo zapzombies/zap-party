@@ -9,6 +9,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,6 +41,7 @@ public class BasicAsyncChatHandler implements AsyncChatHandler {
         this.partyPrefix = partyPrefix;
     }
 
+    @EventHandler
     @Override
     public void onAsyncChat(@NotNull AsyncChatEvent event) {
         Optional<Party> partyOptional = this.partyTracker.getPartyForPlayer(event.getPlayer());

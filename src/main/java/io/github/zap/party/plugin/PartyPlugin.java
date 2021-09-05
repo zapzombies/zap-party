@@ -61,7 +61,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
     public final static String DEFAULT_TRANSLATION_FILE_NAME = "en-US.lang";
 
     public final static String PARTY_PREFIX = "<blue><lang:io.github.zap.party.chat.prefix.party> " +
-            "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow>";
+            "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow> ";
 
     private TranslationRegistry translationRegistry;
 
