@@ -156,7 +156,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
 
             if (newLocalizationDirectory != null) {
                 // write translations if a new directory is being used
-                writeEnglishTranslations(newLocalizationDirectory);
+                this.writeEnglishTranslations(newLocalizationDirectory);
             }
 
             File[] translations = localizationDirectory.listFiles();
@@ -165,7 +165,9 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
             }
 
             if (translations.length == 0) {
-                return;
+                this.getLogger().info("No translation files were found, copying defaults " +
+                        "for basic plugin functionality.");
+                this.writeEnglishTranslations(localizationDirectory);
             }
 
             for (File translation : translations) {
