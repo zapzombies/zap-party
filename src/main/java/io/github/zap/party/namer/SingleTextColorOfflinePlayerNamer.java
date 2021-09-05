@@ -6,6 +6,7 @@ import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ public class SingleTextColorOfflinePlayerNamer implements OfflinePlayerNamer {
      * Creates a single text offline player namer with a specified text color.
      * @param textColor The text color to use
      */
-    public SingleTextColorOfflinePlayerNamer(@NotNull TextColor textColor) {
+    public SingleTextColorOfflinePlayerNamer(@Nullable TextColor textColor) {
         this.textColor = textColor;
     }
 

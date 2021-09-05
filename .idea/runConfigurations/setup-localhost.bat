@@ -1,7 +1,7 @@
 @echo off
 
 set VERSION=1.16.5
-set BUILD=768
+set BUILD=788
 
 echo Setting Up localhost server
 echo Looking for server jar

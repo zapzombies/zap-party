@@ -8,6 +8,7 @@ import io.github.regularcommands.util.Validators;
 import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
+import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,7 +34,7 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
 
     private final CommandValidator<OfflinePlayer, ?> validator;
 
-    public KickMemberForm(@NotNull PartyTracker partyTracker) {
+    public KickMemberForm(@NotNull PartyTracker partyTracker, @NotNull OfflinePlayerNamer playerNamer) {
         super(Component.translatable("io.github.zap.party.command.kick.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
@@ -74,10 +75,7 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
                 }
             }
 
-            Player onlinePlayer = toKick.getPlayer();
-            Component toKickComponent = (onlinePlayer != null)
-                    ? onlinePlayer.displayName()
-                    : Component.text(Objects.toString(toKick.getName()));
+            Component toKickComponent = playerNamer.name(toKick);
 
             return ValidationResult.of(false,
                     Component.translatable("io.github.zap.party.command.notinyourparty",

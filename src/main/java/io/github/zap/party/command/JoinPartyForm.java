@@ -8,6 +8,7 @@ import io.github.regularcommands.util.Validators;
 import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
+import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -31,7 +32,7 @@ public class JoinPartyForm extends CommandForm<Party> {
 
     private final CommandValidator<Party, ?> validator;
 
-    public JoinPartyForm(@NotNull PartyTracker partyTracker) {
+    public JoinPartyForm(@NotNull PartyTracker partyTracker, @NotNull OfflinePlayerNamer playerNamer) {
         super(Component.translatable("io.github.zap.party.command.join.usage"), Permissions.NONE, PARAMETERS);
         this.validator = new CommandValidator<>(((context, arguments, previousData) -> {
             if (partyTracker.getPartyForPlayer(previousData).isPresent()) {
@@ -54,11 +55,7 @@ public class JoinPartyForm extends CommandForm<Party> {
                                 Component.text(ownerName)), null);
             }
 
-            ownerName = owner.getName(); // change any capitalization
-            Player onlinePlayer = owner.getPlayer();
-            Component ownerComponent = (onlinePlayer != null)
-                    ? onlinePlayer.displayName()
-                    : Component.text(Objects.toString(ownerName));
+            Component ownerComponent = playerNamer.name(owner);
 
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(owner);
             if (partyOptional.isEmpty()) {

@@ -8,6 +8,7 @@ import io.github.regularcommands.util.Validators;
 import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
+import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,7 +34,7 @@ public class PartyMuteForm extends CommandForm<OfflinePlayer> {
 
     private final CommandValidator<OfflinePlayer, ?> validator;
 
-    public PartyMuteForm(@NotNull PartyTracker partyTracker) {
+    public PartyMuteForm(@NotNull PartyTracker partyTracker, @NotNull OfflinePlayerNamer playerNamer) {
         super(Component.translatable("io.github.zap.party.command.mute.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
@@ -68,10 +69,7 @@ public class PartyMuteForm extends CommandForm<OfflinePlayer> {
                                     NamedTextColor.RED, Component.text(playerName)), null);
                 }
 
-                Player onlinePlayer = toMute.getPlayer();
-                Component toMuteComponent = (onlinePlayer != null)
-                        ? onlinePlayer.displayName()
-                        : Component.text(Objects.toString(toMute.getName()));
+                Component toMuteComponent = playerNamer.name(toMute);
 
                 Optional<Party> toKickPartyOptional = partyTracker.getPartyForPlayer(toMute);
                 if (toKickPartyOptional.isPresent()) {

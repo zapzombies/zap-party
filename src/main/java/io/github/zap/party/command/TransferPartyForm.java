@@ -8,6 +8,7 @@ import io.github.regularcommands.util.Validators;
 import io.github.regularcommands.validator.CommandValidator;
 import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
+import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -31,7 +32,7 @@ public class TransferPartyForm extends CommandForm<Pair<Party, Player>> {
 
     private final CommandValidator<Pair<Party, Player>, ?> validator;
 
-    public TransferPartyForm(@NotNull PartyTracker partyTracker) {
+    public TransferPartyForm(@NotNull PartyTracker partyTracker, @NotNull OfflinePlayerNamer playerNamer) {
         super(Component.translatable("io.github.zap.party.command.transfer.usage"), Permissions.NONE, PARAMETERS);
 
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
@@ -74,7 +75,7 @@ public class TransferPartyForm extends CommandForm<Pair<Party, Player>> {
 
             return ValidationResult.of(false,
                     Component.translatable("io.github.zap.party.command.notinyourparty",
-                            NamedTextColor.RED, toTransfer.displayName()), null);
+                            NamedTextColor.RED, playerNamer.name(toTransfer)), null);
         }, Validators.PLAYER_EXECUTOR);
     }
 

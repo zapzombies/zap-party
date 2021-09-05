@@ -27,21 +27,29 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.IOError;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 /**
  * ZAP implementation of {@link ZAPParty}.
@@ -56,14 +64,12 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
 
     public final static String LOCALE_LANGUAGE_TAG_KEY = "io.github.zap.locale";
 
-    public final static String LOCALIZATION_FOLDER_NAME = "localization";
+    public final static String LOCALIZATION_DIRECTORY_NAME = "localization";
 
-    public final static String DEFAULT_TRANSLATION_FILE_NAME = "en-US.lang";
+    public final static String DEFAULT_TRANSLATIONS_DIRECTORY = "translations/";
 
     public final static String PARTY_PREFIX = "<blue><lang:io.github.zap.party.chat.prefix.party> " +
             "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow> ";
-
-    private TranslationRegistry translationRegistry;
 
     private PartyTracker partyTracker;
 
@@ -72,6 +78,12 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
 
     @SuppressWarnings("FieldCanBeLocal")
     private CommandManager commandManager;
+
+    private TranslationRegistry translationRegistry;
+
+    private Locale defaultLocale;
+
+    private boolean defaultLocaleTranslationsLoaded = false;
 
     @Override
     public void onEnable() {
@@ -106,12 +118,17 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
         FileConfiguration config = this.getConfig();
 
         config.addDefault(ConfigNames.LOCALIZATION_DIRECTORY,
-                Paths.get(this.getDataFolder().getPath(), LOCALIZATION_FOLDER_NAME).normalize().toString());
-        config.addDefault(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG, Locale.US.toLanguageTag());
+                Paths.get(this.getDataFolder().getPath(), LOCALIZATION_DIRECTORY_NAME).normalize().toString());
+        config.addDefault(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG, DEFAULT_LOCALE.toLanguageTag());
         config.addDefault(ConfigNames.PARTY_PREFIX, PARTY_PREFIX);
 
         config.options().copyDefaults(true);
         this.saveConfig();
+
+        String defaultLocaleTag = config.getString(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG);
+        this.defaultLocale = (defaultLocaleTag != null)
+                ? Locale.forLanguageTag(defaultLocaleTag)
+                : DEFAULT_LOCALE;
     }
 
     /**
@@ -120,129 +137,290 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
      * @param key The key for the {@link TranslationRegistry} that will be registered
      * @throws LoadFailureException If the translations fail to load
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private void initTranslations(@NotNull GlobalTranslator globalTranslator,
                                   @SuppressWarnings("SameParameterValue") @NotNull Key key)
             throws LoadFailureException {
         this.translationRegistry = TranslationRegistry.create(key);
+        this.translationRegistry.defaultLocale(this.defaultLocale);
 
-        String path = this.getConfig().getString(ConfigNames.LOCALIZATION_DIRECTORY);
-        if (path == null) {
-            throw new LoadFailureException("The localization directory for PartyPlusPlus was not defined!");
-        }
-
-        File localizationDirectory = new File(path);
-        try {
-            File newLocalizationDirectory = null;
-            if (localizationDirectory.mkdirs()) {
-                this.getLogger().info("No localization directory was detected, a new one has been created at " +
-                        localizationDirectory.getAbsolutePath() + ".");
-                newLocalizationDirectory = localizationDirectory;
-            }
-
-            if (!localizationDirectory.isDirectory()) {
-                Path newPath = Paths.get(this.getDataFolder().getPath(), LOCALIZATION_FOLDER_NAME)
-                        .normalize()
-                        .toAbsolutePath();
-
-                this.getLogger().info("The provided localization directory was not a directory, resetting " +
-                        "the directory to " + newPath + ".");
-
-                this.getConfig().set(ConfigNames.LOCALIZATION_DIRECTORY, newPath);
-                this.saveConfig();
-
-                newLocalizationDirectory = newPath.toFile();
-            }
-
-            if (newLocalizationDirectory != null) {
-                // write translations if a new directory is being used
-                this.writeEnglishTranslations(newLocalizationDirectory);
-            }
-
-            File[] translations = localizationDirectory.listFiles();
-            if (translations == null) {
-                throw new LoadFailureException("Could not list the files in the translation directory!");
-            }
-
-            if (translations.length == 0) {
-                this.getLogger().info("No translation files were found, copying defaults " +
-                        "for basic plugin functionality.");
-                this.writeEnglishTranslations(localizationDirectory);
-            }
-
-            for (File translation : translations) {
-                Properties properties = new Properties();
-                try {
-                    properties.load(new BufferedReader(new FileReader(translation)));
-                }
-                catch (FileNotFoundException e) {
-                    this.getLogger().warning("Could not read from file " + translation.getAbsolutePath() +
-                            " as it no longer exists, skipping...");
-                    continue;
-                }
-                catch (IOException e) {
-                    this.getLogger().log(Level.WARNING, "Failed to read translation file "
-                            + translation.getAbsolutePath() + ", skipping...", e);
-                    continue;
-                }
-                catch (IllegalArgumentException e) {
-                    this.getLogger().log(Level.WARNING, "Malformed Unicode in translation file "
-                            + translation.getAbsolutePath() + ", skipping...", e);
-                    continue;
-                }
-
-                String languageTag = properties.getProperty(LOCALE_LANGUAGE_TAG_KEY);
-                if (languageTag == null) {
-                    this.getLogger().warning("Translation file " + translation.getAbsolutePath() +
-                            " did not specify a language tag, skipping...");
-                    continue;
-                }
-
-                properties.remove(LOCALE_LANGUAGE_TAG_KEY);
-
-                Locale locale = Locale.forLanguageTag(languageTag);
-                // the PropertyResourceBundle does raw generics here so we may as well too
-                this.translationRegistry.registerAll(locale, (Set) properties.keySet(),
-                        translationKey -> new MessageFormat(properties.getProperty(translationKey), locale));
-            }
-        }
-        catch (SecurityException e) {
-            throw new LoadFailureException("Failed to create a localization directory!", e);
-        }
-
-        String defaultLanguageTag = this.getConfig().getString(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG);
-        if (defaultLanguageTag == null) {
-            this.getLogger().info("A default language tag was not specified, using "
-                    + DEFAULT_LOCALE.toLanguageTag() + ".");
-            this.translationRegistry.defaultLocale(DEFAULT_LOCALE);
-        } else {
-            this.translationRegistry.defaultLocale(Locale.forLanguageTag(defaultLanguageTag));
-        }
+        this.tryLoadTranslations(this.findLocalizationDirectory());
 
         globalTranslator.addSource(this.translationRegistry);
     }
 
     /**
-     * Writes the English translations to the localization directory.
-     * @param directory The directory to write translations to
-     * @throws LoadFailureException If an error occurred while writing the English translations
+     * Finds the localization directory
+     * @return The localization directory
+     * @throws LoadFailureException If the localization directory was unable to be found
      */
-    private void writeEnglishTranslations(@NotNull File directory) throws LoadFailureException {
-        File outputFile = new File(directory, DEFAULT_TRANSLATION_FILE_NAME);
-        this.getLogger().info("Writing English translations to " + outputFile.getAbsolutePath() + ".");
+    private @NotNull Path findLocalizationDirectory() throws LoadFailureException {
+        String path = this.getConfig().getString(ConfigNames.LOCALIZATION_DIRECTORY);
+        if (path == null) {
+            throw new LoadFailureException("The localization directory for ZAPParty was not defined!");
+        }
 
-        try (InputStream input = this.getResource(DEFAULT_TRANSLATION_FILE_NAME)) {
-            if (input == null) {
-                throw new LoadFailureException("Expected default en-US.lang file exists in the plugin" +
-                        " resources!");
+        Path localizationDirectory = Paths.get(path);
+
+        boolean exists;
+        try {
+            exists = Files.exists(localizationDirectory);
+        }
+        catch (SecurityException e) {
+            throw new LoadFailureException("Failed to check if localization directory exists!");
+        }
+
+        if (!exists) {
+            try {
+                Files.createDirectories(localizationDirectory);
+            } catch (IOException | SecurityException e) {
+                throw new LoadFailureException("Unable to create localization directory!");
             }
 
-            try (OutputStream output = new FileOutputStream(outputFile)) {
-                input.transferTo(output);
+            Path absoluteLocalizationDirectory = localizationDirectory;
+            try {
+                absoluteLocalizationDirectory = localizationDirectory.toAbsolutePath();
+            }
+            catch (IOError | SecurityException e) {
+                this.getLogger().warning("Failed to find absolute path for localization directory, " +
+                        "using " + localizationDirectory + ".");
+            }
+
+            this.getLogger().info("No localization directory was detected, a new one has been created at " +
+                    absoluteLocalizationDirectory + ".");
+        }
+
+        boolean isDirectory;
+        try {
+            isDirectory = Files.isDirectory(localizationDirectory);
+        }
+        catch (SecurityException e) {
+            throw new LoadFailureException("Failed to check if a localization directory was a directory!", e);
+        }
+
+        if (!isDirectory) {
+            localizationDirectory = this.resetLocalizationDirectory();
+        }
+
+        return localizationDirectory;
+    }
+
+    /**
+     * Resets the default localization directory
+     * @return The new localization directory
+     * @throws LoadFailureException If a new localization directory was unable to be created
+     */
+    private @NotNull Path resetLocalizationDirectory() throws LoadFailureException {
+        Path newPath;
+        try {
+            newPath = Paths.get(this.getDataFolder().getPath(), LOCALIZATION_DIRECTORY_NAME);
+        }
+        catch (InvalidPathException e) {
+            throw new LoadFailureException("Could not resolve default localization directory path!", e);
+        }
+
+        newPath = newPath.normalize();
+        try {
+            newPath = newPath.toAbsolutePath();
+        }
+        catch (IOError | SecurityException e) {
+            this.getLogger().warning("Failed to find absolute path for default localization directory, " +
+                    "using " + newPath + ".");
+        }
+
+        this.getLogger().info("The provided localization directory was not a directory, resetting " +
+                "the directory to " + newPath + ".");
+
+        try {
+            Files.createDirectories(newPath);
+        }
+        catch (IOException | SecurityException e) {
+            throw new LoadFailureException("Could not create a new localization directory!", e);
+        }
+
+        this.getConfig().set(ConfigNames.LOCALIZATION_DIRECTORY, newPath);
+        this.saveConfig();
+
+        return newPath;
+    }
+
+    /**
+     * Attempts to load translations from a localization directory
+     * @param localizationDirectory The localization directory to load translations from
+     * @throws LoadFailureException If loading translations failed
+     */
+    private void tryLoadTranslations(@NotNull Path localizationDirectory) throws LoadFailureException {
+        try (Stream<Path> stream = Files.list(localizationDirectory)) {
+            Iterator<Path> iterator = stream.iterator();
+
+            if (!iterator.hasNext()) {
+                this.getLogger().info("No translation files were found, copying defaults " +
+                        "for basic plugin functionality.");
+                this.writeDefaultTranslations(localizationDirectory);
+            }
+            else {
+                while (iterator.hasNext()) {
+                    this.loadTranslations(iterator.next());
+                }
+
+                if (!this.defaultLocaleTranslationsLoaded) {
+                    throw new LoadFailureException("The default locale " + this.defaultLocale +
+                            " was unable to be loaded!");
+                }
+            }
+        } catch (IOException e) {
+            throw new LoadFailureException("Failed to list files in the localization directory!");
+        }
+    }
+
+    /**
+     * Loads actual translations from a filee and registers them to the {@link TranslationRegistry}.
+     * @param path The file to read from
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void loadTranslations(@NotNull Path path) throws LoadFailureException {
+        Properties properties = new Properties();
+
+        try {
+            path = path.toAbsolutePath();
+        }
+        catch (IOError | SecurityException e) {
+            this.getLogger().warning("Failed to find absolute path for translation file, using " +
+                    path + ".");
+        }
+
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            try {
+                properties.load(reader);
+            }
+            catch (FileNotFoundException e) {
+                this.getLogger().log(Level.WARNING, "Could not read from file " + path + " as it " +
+                        "no longer exists, skipping...", e);
+                return;
+            }
+            catch (IOException e) {
+                this.getLogger().log(Level.WARNING, "Failed to read translation file " + path +
+                        ", skipping...", e);
+                return;
+            }
+            catch (IllegalArgumentException e) {
+                this.getLogger().log(Level.WARNING, "Malformed Unicode in translation file " + path +
+                        ", skipping...", e);
+                return;
+            }
+        } catch (IOException | SecurityException e) {
+            this.getLogger().log(Level.WARNING, "Failed to read translation file "
+                    + path + ", skipping...", e);
+        }
+
+        String languageTag = properties.getProperty(LOCALE_LANGUAGE_TAG_KEY);
+        if (languageTag == null) {
+            this.getLogger().warning("Translation file " + path +
+                    " did not specify a language tag, skipping...");
+            return;
+        }
+
+        properties.remove(LOCALE_LANGUAGE_TAG_KEY);
+
+        Locale locale = Locale.forLanguageTag(languageTag);
+        // the PropertyResourceBundle does raw generics here, so we may as well too
+        try {
+            this.translationRegistry.registerAll(locale, (Set) properties.keySet(),
+                    translationKey -> new MessageFormat(properties.getProperty(translationKey), locale));
+
+            if (this.defaultLocale.equals(locale)) {
+                this.defaultLocaleTranslationsLoaded = true;
             }
         }
-        catch (IOException e) {
-            throw new LoadFailureException("Failed to copy default English translation file!");
+        catch (IllegalArgumentException e) {
+            throw new LoadFailureException("Party translations have already been registered!", e);
+        }
+    }
+
+    /**
+     * Writes the default translations to the localization directory.
+     * @param target The directory to write translations to
+     * @throws LoadFailureException If an error occurred while writing the default translations
+     */
+    private void writeDefaultTranslations(@NotNull Path target) throws LoadFailureException {
+        target = target.normalize();
+        try {
+            target = target.toAbsolutePath();
+        }
+        catch (IOError | SecurityException e) {
+            this.getLogger().warning("Failed to find absolute path for localization directory, using " +
+                    target + ".");
+        }
+
+        Path finalPath = target;
+
+        this.getLogger().info("Writing default translations to " + target + ".");
+
+        URL translations = this.getClassLoader().getResource(DEFAULT_TRANSLATIONS_DIRECTORY);
+        if (translations == null) {
+            throw new LoadFailureException("Could not find a default translation directory for plugin resources!");
+        }
+
+        try (FileSystem fileSystem = FileSystems.newFileSystem(translations.toURI(), Collections.emptyMap())) {
+            Path root;
+            try {
+                root = fileSystem.getPath(DEFAULT_TRANSLATIONS_DIRECTORY);
+            }
+            catch (InvalidPathException e) {
+                throw new LoadFailureException("Failed to create a valid path for default translations!", e);
+            }
+
+            LoadFailureException[] exception = new LoadFailureException[] { null };
+            try {
+                Files.walkFileTree(root, new SimpleFileVisitor<>() {
+
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                        Path nextPath = finalPath.resolve(root.relativize(dir).toString());
+                        try {
+                            Files.createDirectories(nextPath);
+                        }
+                        catch (IOException | SecurityException e) {
+                            PartyPlugin.this.getLogger().log(Level.WARNING, "Unable to copy " +
+                                    "translation directory to " + nextPath + ", skipping...", e);
+                        }
+
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                        Path nextPath = finalPath.resolve(root.relativize(file).toString());
+                        try {
+                            Files.copy(file, nextPath);
+                            PartyPlugin.this.loadTranslations(nextPath);
+                        }
+                        catch (UnsupportedOperationException | IOException | SecurityException e) {
+                            PartyPlugin.this.getLogger().log(Level.WARNING, "Unable to copy " +
+                                    "translation file to " + nextPath + ", skipping...", e);
+                        }
+                        catch (LoadFailureException e) {
+                            exception[0] = e;
+                            return FileVisitResult.TERMINATE;
+                        }
+
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+
+                if (exception[0] != null) {
+                    throw exception[0];
+                }
+
+                if (!this.defaultLocaleTranslationsLoaded) {
+                    throw new LoadFailureException("The default locale " + this.defaultLocale +
+                            " was unable to be loaded!");
+                }
+            } catch (IOException e) {
+                throw new LoadFailureException("Failed to walk through translation files!", e);
+            }
+        }
+        catch (IOException | URISyntaxException e) {
+            throw new LoadFailureException("Could not create a file system for default translations!", e);
         }
     }
 
@@ -277,7 +455,8 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.commandManager.registerCommand(new PartyCommand(this.partyTracker,
                 owner -> new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
-                        new TimedInvitationManager(this, playerNamer), partyLister, playerNamer)));
+                        new TimedInvitationManager(this, playerNamer), partyLister, playerNamer),
+                new SingleTextColorOfflinePlayerNamer(null)));
     }
 
     @Override
