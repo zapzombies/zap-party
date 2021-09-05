@@ -10,8 +10,10 @@ import io.github.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -45,7 +47,8 @@ public class ListMembersForm extends CommandForm<Party> {
 
     @Override
     public String execute(Context context, Object[] arguments, Party data) {
-        for (Component component : data.getPartyLister().getPartyListComponents(data)) {
+        Locale locale = ((Player) context.getSender()).locale();
+        for (Component component : data.getPartyLister().getPartyListComponents(data, locale)) {
             context.getSender().sendMessage(component);
         }
         return null;

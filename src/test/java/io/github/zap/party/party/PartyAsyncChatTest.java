@@ -1,22 +1,23 @@
 package io.github.zap.party.party;
 
 import io.github.zap.party.Party;
-import io.github.zap.party.plugin.chat.AsyncChatHandler;
-import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
 import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.namer.SingleTextColorOfflinePlayerNamer;
+import io.github.zap.party.plugin.chat.AsyncChatHandler;
+import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.settings.PartySettings;
 import io.github.zap.party.tracker.PartyTracker;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -30,7 +31,13 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.OngoingStubbing;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class PartyAsyncChatTest {
@@ -38,8 +45,6 @@ public class PartyAsyncChatTest {
     private final static int BEST_TICK = 69;
 
     private static Server server;
-
-    private final MiniMessage miniMessage = MiniMessage.get();
 
     private AsyncChatHandler asyncChatHandler;
 
@@ -84,17 +89,20 @@ public class PartyAsyncChatTest {
         Plugin plugin = Mockito.mock(Plugin.class);
         Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();
-        PartyLister partyLister = new BasicPartyLister(plugin, this.miniMessage,
+        PartyLister partyLister = new BasicPartyLister(plugin,
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.party = new Party(this.miniMessage, random, new PartyMember(this.owner),
-                new PartySettings(), PartyMember::new,
-                new TimedInvitationManager(plugin, this.miniMessage, playerNamer), partyLister, playerNamer);
+        this.party = new Party(random, new PartyMember(this.owner),
+                new PartySettings(), PartyMember::new, new TimedInvitationManager(plugin, playerNamer), partyLister,
+                playerNamer);
 
         PartyTracker partyTracker = new PartyTracker();
         partyTracker.trackParty(this.party);
-        this.asyncChatHandler = new BasicAsyncChatHandler(plugin, partyTracker, this.miniMessage);
+        this.asyncChatHandler = new BasicAsyncChatHandler(plugin, partyTracker, TextComponent.ofChildren(
+           Component.text("Party ", NamedTextColor.BLUE),
+           Component.text("> ", NamedTextColor.DARK_GRAY)
+        ));
     }
 
     @Test
@@ -146,7 +154,8 @@ public class PartyAsyncChatTest {
                     event.originalMessage(), audience);
             Component newMessage = event.renderer().render(this.member, this.member.displayName(),
                     event.message(), audience);
-            Assertions.assertTrue(newMessage.children().contains(oldMessage));
+            Assertions.assertTrue(newMessage instanceof TranslatableComponent translatableComponent
+                    && translatableComponent.args().contains(oldMessage));
         }}
 
     @Test

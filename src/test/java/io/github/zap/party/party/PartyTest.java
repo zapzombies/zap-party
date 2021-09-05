@@ -1,7 +1,6 @@
 package io.github.zap.party.party;
 
 import io.github.zap.party.Party;
-import io.github.zap.party.plugin.chat.BasicAsyncChatHandler;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
@@ -11,7 +10,6 @@ import io.github.zap.party.namer.SingleTextColorOfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -26,6 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -37,8 +36,6 @@ public class PartyTest {
     private final UUID veryAverageUUID = UUID.fromString("ade229bf-d062-46e8-99d8-97b667d5a127");
 
     private final UUID bigDipUUID = UUID.fromString("a7db1c97-6064-46a1-91c6-77a4c974b692");
-
-    private final MiniMessage miniMessage = MiniMessage.get();
 
     private Plugin plugin;
 
@@ -67,11 +64,13 @@ public class PartyTest {
         Mockito.when(this.owner.getUniqueId()).thenReturn(this.veryAverageUUID);
         Mockito.when(this.owner.displayName()).thenReturn(Component.text("VeryAverage"));
         Mockito.when(this.owner.getServer()).thenReturn(this.server);
+        Mockito.when(this.owner.locale()).thenReturn(Locale.ENGLISH);
 
         this.member = Mockito.mock(Player.class);
         Mockito.when(this.member.getUniqueId()).thenReturn(this.bigDipUUID);
         Mockito.when(this.member.displayName()).thenReturn(Component.text("BigDip123"));
         Mockito.when(this.member.getServer()).thenReturn(this.server);
+        Mockito.when(this.member.locale()).thenReturn(Locale.ENGLISH);
 
         Mockito.when(this.server.getOfflinePlayer(this.owner.getUniqueId())).thenReturn(this.owner);
         Mockito.when(this.server.getOfflinePlayer(this.member.getUniqueId())).thenReturn(this.member);
@@ -81,13 +80,13 @@ public class PartyTest {
 
         Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();
-        PartyLister partyLister = new BasicPartyLister(this.plugin, this.miniMessage,
+        PartyLister partyLister = new BasicPartyLister(this.plugin,
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.party = new Party(this.miniMessage, random, new PartyMember(this.owner),
-                new PartySettings(), PartyMember::new,
-                new TimedInvitationManager(this.plugin, this.miniMessage, playerNamer), partyLister, playerNamer);
+        this.party = new Party(random, new PartyMember(this.owner),
+                new PartySettings(), PartyMember::new, new TimedInvitationManager(this.plugin, playerNamer),
+                partyLister, playerNamer);
     }
 
     @Test
@@ -198,6 +197,7 @@ public class PartyTest {
 
         Mockito.when(this.member.getPlayer()).thenReturn(this.member);
         Mockito.when(this.member.isOnline()).thenReturn(true);
+        Mockito.when(this.server.getPlayer(this.member.getUniqueId())).thenReturn(this.member);
         this.party.getInvitationManager().addInvitation(this.party, this.member, this.owner);
         Assertions.assertEquals(1, this.party.getInvitationManager().getInvitations().size());
         runnable[0].run();

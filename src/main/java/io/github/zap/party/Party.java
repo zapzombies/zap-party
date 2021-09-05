@@ -1,5 +1,6 @@
 package io.github.zap.party;
 
+import com.ibm.icu.text.PluralRules;
 import io.github.zap.party.invitation.InvitationManager;
 import io.github.zap.party.list.PartyLister;
 import io.github.zap.party.member.PartyMember;
@@ -7,9 +8,7 @@ import io.github.zap.party.member.PartyMemberBuilder;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -39,8 +38,6 @@ public class Party {
 
     private final List<Consumer<PartyMember>> partyLeaveHandlers = new ArrayList<>();
 
-    private final MiniMessage miniMessage;
-
     private final Random random;
 
     private final PartySettings partySettings;
@@ -57,7 +54,6 @@ public class Party {
 
     /**
      * Creates a party.
-     * @param miniMessage A {@link MiniMessage} instance to parse messages
      * @param random A {@link Random} instance used for random selections in parties
      * @param owner The owner of the party
      * @param partySettings The settings for the party
@@ -66,11 +62,9 @@ public class Party {
      * @param partyLister A lister for party list components
      * @param playerNamer A namer for {@link Component} names of players
      */
-    public Party(@NotNull MiniMessage miniMessage, @NotNull Random random, @NotNull PartyMember owner,
-                 @NotNull PartySettings partySettings, @NotNull PartyMemberBuilder partyMemberBuilder,
-                 @NotNull InvitationManager invitationManager, @NotNull PartyLister partyLister,
-                 @NotNull OfflinePlayerNamer playerNamer) {
-        this.miniMessage = miniMessage;
+    public Party(@NotNull Random random, @NotNull PartyMember owner, @NotNull PartySettings partySettings,
+                 @NotNull PartyMemberBuilder partyMemberBuilder, @NotNull InvitationManager invitationManager,
+                 @NotNull PartyLister partyLister, @NotNull OfflinePlayerNamer playerNamer) {
         this.random = random;
         this.owner = owner;
         this.partySettings = partySettings;
@@ -114,8 +108,8 @@ public class Party {
         this.members.put(memberUUID, partyMember);
         this.invitationManager.removeInvitation(player);
 
-        this.broadcastMessage(this.miniMessage.parse("<member> <yellow>has joined the party.",
-                Template.of("member", player.displayName())));
+        this.broadcastMessage(Component.translatable("io.github.zap.party.member.joined", NamedTextColor.YELLOW,
+                player.displayName().colorIfAbsent(NamedTextColor.WHITE)));
 
         for (Consumer<PartyMember> handler : this.partyJoinHandlers) {
             handler.accept(partyMember);
@@ -134,18 +128,17 @@ public class Party {
         }
 
         PartyMember removed = this.members.remove(player.getUniqueId());
-        String message = (forced) ? "been removed from" : "left";
 
-        Component name = this.playerNamer.name(player);
+        Component name = this.playerNamer.name(player).colorIfAbsent(NamedTextColor.WHITE);
 
         boolean clearHandlers = false;
         if (this.owner.equals(removed)) {
             chooseNewOwner();
 
             if (this.owner != null) {
-                this.broadcastMessage(this.miniMessage.parse("<yellow>The party has been transferred " +
-                        "to <to><reset><yellow>.",
-                        Template.of("to", this.playerNamer.name(this.owner.getOfflinePlayer()))));
+                this.broadcastMessage(Component.translatable("io.github.zap.party.transferred",
+                        NamedTextColor.YELLOW, name,
+                        this.playerNamer.name(this.owner.getOfflinePlayer()).colorIfAbsent(NamedTextColor.WHITE)));
             }
             else {
                 this.invitationManager.cancelAllOutgoingInvitations();
@@ -153,13 +146,26 @@ public class Party {
             }
         }
 
-        this.broadcastMessage(TextComponent.ofChildren(this.miniMessage
-                .parse("<member> <reset><yellow>has " + message + " the party.",
-                        Template.of("member", name))));
+        if (forced) {
+            this.broadcastMessage(Component.translatable("io.github.zap.party.member.removed.remaining",
+                    NamedTextColor.YELLOW, name));
 
-        Player removedPlayer = player.getPlayer();
-        if (removedPlayer != null && removedPlayer.isOnline()) {
-            removedPlayer.sendMessage(this.miniMessage.parse("<yellow>You have " + message + " the party."));
+
+            Player removedPlayer = player.getPlayer();
+            if (removedPlayer != null && removedPlayer.isOnline()) {
+                removedPlayer.sendMessage(Component.translatable("io.github.zap.party.member.removed.leaver",
+                        NamedTextColor.YELLOW));
+            }
+        }
+        else {
+            this.broadcastMessage(Component.translatable("io.github.zap.party.member.left.remaining",
+                    NamedTextColor.YELLOW, name));
+
+            Player removedPlayer = player.getPlayer();
+            if (removedPlayer != null && removedPlayer.isOnline()) {
+                removedPlayer.sendMessage(Component.translatable("io.github.zap.party.member.left.leaver",
+                        NamedTextColor.YELLOW));
+            }
         }
 
         for (Consumer<PartyMember> handler : this.partyLeaveHandlers) {
@@ -190,11 +196,11 @@ public class Party {
                     chooseNewOwner();
 
                     if (this.owner != null) {
-                        this.broadcastMessage(this.miniMessage.parse("<previous>" +
-                                        " <yellow>has been removed from the party. The party has been transferred to " +
-                                        "<reset><owner><reset><yellow>.",
-                                Template.of("previous", this.playerNamer.name(player)),
-                                Template.of("owner", this.playerNamer.name(this.owner.getOfflinePlayer()))));
+                        this.broadcastMessage(Component.translatable("io.github.zap.party.kickoffline.newowner",
+                                NamedTextColor.YELLOW,
+                                this.playerNamer.name(player).colorIfAbsent(NamedTextColor.WHITE),
+                                this.playerNamer.name(this.owner.getOfflinePlayer())
+                                        .colorIfAbsent(NamedTextColor.WHITE)));
                     }
                     else {
                         this.invitationManager.cancelAllOutgoingInvitations();
@@ -211,13 +217,14 @@ public class Party {
             }
         }
 
-        if (offlinePlayers.size() == 1) {
-            this.broadcastMessage(this.miniMessage.parse("<red>1 offline player has been removed from " +
-                    "the party."));
-        }
-        else {
-            this.broadcastMessage(this.miniMessage.parse("<red>" + offlinePlayers.size() + " offline players " +
-                    "have been removed from the party."));
+        for (PartyMember member : this.members.values()) {
+            member.getPlayerIfOnline().ifPresent(player -> {
+                PluralRules rules = PluralRules.forLocale(player.locale());
+                String rule = rules.select(offlinePlayers.size());
+
+                player.sendMessage(Component.translatable("io.github.zap.party.kickoffline.kicked." + rule,
+                        NamedTextColor.RED, Component.text(offlinePlayers.size())));
+            });
         }
 
         if (clearHandlers) {
@@ -233,8 +240,12 @@ public class Party {
      */
     public void mute() {
         this.partySettings.setMuted(!this.partySettings.isMuted());
-        this.broadcastMessage(this.miniMessage.parse("<yellow>The party has been "
-                + (this.partySettings.isMuted() ? "muted" : "unmuted") + "."));
+        if (this.partySettings.isMuted()) {
+            this.broadcastMessage(Component.translatable("io.github.zap.party.muted", NamedTextColor.YELLOW));
+        }
+        else {
+            this.broadcastMessage(Component.translatable("io.github.zap.party.unmuted", NamedTextColor.YELLOW));
+        }
     }
 
     /**
@@ -245,9 +256,16 @@ public class Party {
         PartyMember member = this.members.get(player.getUniqueId());
         if (member != null && member != this.owner) {
             member.setMuted(!member.isMuted());
-            this.broadcastMessage(this.miniMessage.parse("<member> <reset><yellow>has been "
-                            + (member.isMuted() ? "muted" : "unmuted") + ".",
-                    Template.of("member", this.playerNamer.name(member.getOfflinePlayer()))));
+
+            Component name = this.playerNamer.name(member.getOfflinePlayer()).colorIfAbsent(NamedTextColor.WHITE);
+            if (member.isMuted()) {
+                this.broadcastMessage(Component.translatable("io.github.zap.party.member.muted",
+                        NamedTextColor.YELLOW, name));
+            }
+            else {
+                this.broadcastMessage(Component.translatable("io.github.zap.party.member.unmuted",
+                        NamedTextColor.YELLOW, name));
+            }
         }
     }
 
@@ -289,7 +307,7 @@ public class Party {
         Collection<PartyMember> memberCollection = this.members.values();
         List<OfflinePlayer> offlinePlayers = new ArrayList<>(memberCollection.size());
 
-        Component disband = this.miniMessage.parse("<red>The party has been disbanded.");
+        Component disband = Component.translatable("io.github.zap.party.disbanded", NamedTextColor.RED);
 
         this.owner = null;
 
@@ -358,12 +376,9 @@ public class Party {
             throw new IllegalArgumentException("Tried to transfer the party to a member that is not in the party!");
         }
 
-        Component fromName = this.playerNamer.name(member.getOfflinePlayer());
-        Component toName = this.playerNamer.name(player);
-
-        this.broadcastMessage(this.miniMessage.parse("<yellow>The party has been transferred " +
-                "from <reset><from> <reset><yellow>to <reset><to><reset><yellow>.",
-                Template.of("from", fromName), Template.of("to", toName)));
+        this.broadcastMessage(Component.translatable("io.github.zap.party.transferred", NamedTextColor.YELLOW,
+                this.playerNamer.name(member.getOfflinePlayer()).colorIfAbsent(NamedTextColor.WHITE),
+                this.playerNamer.name(player).colorIfAbsent(NamedTextColor.WHITE)));
 
         this.owner = member;
     }

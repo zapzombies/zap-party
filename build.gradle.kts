@@ -1,4 +1,5 @@
-import io.github.zap.build.gradle.convention.*
+import io.github.zap.build.gradle.convention.paperApi
+import io.github.zap.build.gradle.convention.publishToZGpr
 
 // Uncomment to use local maven version - help local testing faster
 plugins {
@@ -17,6 +18,7 @@ dependencies {
     }
     relocate("com.github.Steanky:RegularCommands:master-SNAPSHOT")
     relocate("org.apache.commons:commons-lang3:3.12.0")
+    relocate("com.ibm.icu:icu4j:69.1")
 }
 
 publishToZGpr()
