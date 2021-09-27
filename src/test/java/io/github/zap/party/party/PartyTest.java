@@ -78,13 +78,12 @@ public class PartyTest {
         this.plugin = Mockito.mock(Plugin.class);
         Mockito.when(this.plugin.getServer()).thenReturn(this.server);
 
-        Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();
         PartyLister partyLister = new BasicPartyLister(this.plugin,
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.party = new Party(random, new PartyMember(this.owner),
+        this.party = new Party(new Random(), new PartyMember(this.owner),
                 new PartySettings(), PartyMember::new, new TimedInvitationManager(this.plugin, playerNamer),
                 partyLister, playerNamer);
     }

@@ -15,6 +15,7 @@ import io.github.zap.party.plugin.config.ConfigNames;
 import io.github.zap.party.plugin.exception.LoadFailureException;
 import io.github.zap.party.settings.PartySettings;
 import io.github.zap.party.tracker.PartyTracker;
+import io.papermc.paper.text.PaperComponents;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -32,6 +33,7 @@ import java.io.IOError;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -44,6 +46,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
@@ -288,7 +291,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
                     path + ".");
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (BufferedReader reader = Files.newBufferedReader(path, Charset.defaultCharset())) {
             try {
                 properties.load(reader);
             }
@@ -437,7 +440,8 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
      */
     private void initAsyncChatEventHandler(@NotNull MiniMessage miniMessage) {
         this.asyncChatHandler = new BasicAsyncChatHandler(this, this.partyTracker,
-                miniMessage.parse(this.getConfig().getString(ConfigNames.PARTY_PREFIX, PARTY_PREFIX)));
+                miniMessage.parse(this.getConfig().getString(ConfigNames.PARTY_PREFIX, PARTY_PREFIX)),
+                List.of(Bukkit.getConsoleSender()));
         Bukkit.getPluginManager().registerEvents(this.asyncChatHandler, this);
     }
 
