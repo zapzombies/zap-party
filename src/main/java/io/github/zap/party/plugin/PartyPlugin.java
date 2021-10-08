@@ -1,6 +1,7 @@
 package io.github.zap.party.plugin;
 
-import io.github.regularcommands.commands.CommandManager;
+import io.github.zap.regularcommands.commands.BasicPageBuilder;
+import io.github.zap.regularcommands.commands.CommandManager;
 import io.github.zap.party.Party;
 import io.github.zap.party.command.PartyCommand;
 import io.github.zap.party.invitation.TimedInvitationManager;
@@ -97,7 +98,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
             initTranslations(GlobalTranslator.get(), TRANSLATION_REGISTRY_KEY);
             initPartyTracker();
             initAsyncChatEventHandler(MiniMessage.get());
-            initCommands();
+            initCommands(GlobalTranslator.get());
 
             timer.stop();
             this.getLogger().info("Enabled successfully; ~" + timer.getTime() + "ms elapsed.");
@@ -447,9 +448,10 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
 
     /**
      * Registers the {@link CommandManager}.
+     * @param globalTranslator The {@link GlobalTranslator} for the {@link CommandManager}
      */
-    private void initCommands() {
-        this.commandManager = new CommandManager(this);
+    private void initCommands(@NotNull GlobalTranslator globalTranslator) {
+        this.commandManager = new CommandManager(this, globalTranslator);
 
         Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();
@@ -457,7 +459,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.commandManager.registerCommand(new PartyCommand(this.partyTracker,
+        this.commandManager.registerCommand(new PartyCommand(commandManager, new BasicPageBuilder(), this.partyTracker,
                 owner -> new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
                         new TimedInvitationManager(this, playerNamer), partyLister, playerNamer),
                 new SingleTextColorOfflinePlayerNamer(null)));

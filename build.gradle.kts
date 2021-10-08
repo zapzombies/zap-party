@@ -1,5 +1,6 @@
 import io.github.zap.build.gradle.convention.paperApi
 import io.github.zap.build.gradle.convention.publishToZGpr
+import io.github.zap.build.gradle.convention.zgpr
 
 // Uncomment to use local maven version - help local testing faster
 plugins {
@@ -8,7 +9,7 @@ plugins {
 }
 
 repositories {
-    maven("https://jitpack.io")
+    maven(zgpr("regular-commands"))
 }
 
 dependencies {
@@ -16,7 +17,7 @@ dependencies {
     relocate("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT") {
         exclude("net.kyori", "adventure-api")
     }
-    relocate("com.github.thamid-gamer:RegularCommands:master-SNAPSHOT")
+    relocate("io.github.zap:regular-commands:1.0.0")
     relocate("org.apache.commons:commons-lang3:3.12.0")
     relocate("com.ibm.icu:icu4j:69.1")
 }

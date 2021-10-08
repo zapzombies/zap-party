@@ -1,12 +1,13 @@
 package io.github.zap.party.command;
 
-import io.github.regularcommands.commands.CommandForm;
-import io.github.regularcommands.commands.Context;
-import io.github.regularcommands.converter.Parameter;
-import io.github.regularcommands.util.Permissions;
-import io.github.regularcommands.util.Validators;
-import io.github.regularcommands.validator.CommandValidator;
-import io.github.regularcommands.validator.ValidationResult;
+import io.github.zap.regularcommands.commands.CommandForm;
+import io.github.zap.regularcommands.commands.Context;
+import io.github.zap.regularcommands.commands.RegularCommand;
+import io.github.zap.regularcommands.converter.Parameter;
+import io.github.zap.regularcommands.util.Permissions;
+import io.github.zap.regularcommands.util.Validators;
+import io.github.zap.regularcommands.validator.CommandValidator;
+import io.github.zap.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
@@ -29,8 +30,8 @@ public class LeavePartyForm extends CommandForm<Void> {
 
     private final CommandValidator<Void, ?> validator;
 
-    public LeavePartyForm(@NotNull PartyTracker partyTracker) {
-        super(Component.translatable("io.github.zap.party.command.leave.usage"), Permissions.NONE, PARAMETERS);
+    public LeavePartyForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker) {
+        super(regularCommand, Component.translatable("io.github.zap.party.command.leave.usage"), Permissions.NONE, PARAMETERS);
 
         this.partyTracker = partyTracker;
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {

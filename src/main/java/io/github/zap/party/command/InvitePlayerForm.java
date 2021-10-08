@@ -1,12 +1,13 @@
 package io.github.zap.party.command;
 
-import io.github.regularcommands.commands.CommandForm;
-import io.github.regularcommands.commands.Context;
-import io.github.regularcommands.converter.Parameter;
-import io.github.regularcommands.util.Permissions;
-import io.github.regularcommands.util.Validators;
-import io.github.regularcommands.validator.CommandValidator;
-import io.github.regularcommands.validator.ValidationResult;
+import io.github.zap.regularcommands.commands.CommandForm;
+import io.github.zap.regularcommands.commands.Context;
+import io.github.zap.regularcommands.commands.RegularCommand;
+import io.github.zap.regularcommands.converter.Parameter;
+import io.github.zap.regularcommands.util.Permissions;
+import io.github.zap.regularcommands.util.Validators;
+import io.github.zap.regularcommands.validator.CommandValidator;
+import io.github.zap.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.creator.PartyCreator;
 import io.github.zap.party.tracker.PartyTracker;
@@ -23,7 +24,7 @@ public class InvitePlayerForm extends CommandForm<Player> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
             new Parameter("invite"),
-            new Parameter("\\w+", "[player-name]")
+            new Parameter("\\w+", Component.text("[player-name]"))
     };
 
     private final static CommandValidator<Player, ?> VALIDATOR
@@ -49,8 +50,10 @@ public class InvitePlayerForm extends CommandForm<Player> {
 
     private final PartyCreator partyCreator;
 
-    public InvitePlayerForm(@NotNull PartyTracker partyTracker, @NotNull PartyCreator partyCreator) {
-        super(Component.translatable("io.github.zap.party.command.invite.usage"), Permissions.NONE, PARAMETERS);
+    public InvitePlayerForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker,
+                            @NotNull PartyCreator partyCreator) {
+        super(regularCommand, Component.translatable("io.github.zap.party.command.invite.usage"), Permissions.NONE,
+                PARAMETERS);
 
         this.partyTracker = partyTracker;
         this.partyCreator = partyCreator;

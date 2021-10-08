@@ -1,12 +1,13 @@
 package io.github.zap.party.command;
 
-import io.github.regularcommands.commands.CommandForm;
-import io.github.regularcommands.commands.Context;
-import io.github.regularcommands.converter.Parameter;
-import io.github.regularcommands.util.Permissions;
-import io.github.regularcommands.util.Validators;
-import io.github.regularcommands.validator.CommandValidator;
-import io.github.regularcommands.validator.ValidationResult;
+import io.github.zap.regularcommands.commands.CommandForm;
+import io.github.zap.regularcommands.commands.Context;
+import io.github.zap.regularcommands.commands.RegularCommand;
+import io.github.zap.regularcommands.converter.Parameter;
+import io.github.zap.regularcommands.util.Permissions;
+import io.github.zap.regularcommands.util.Validators;
+import io.github.zap.regularcommands.validator.CommandValidator;
+import io.github.zap.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
@@ -26,13 +27,15 @@ public class JoinPartyForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
             new Parameter("join"),
-            new Parameter("\\w+", "[owner-name]")
+            new Parameter("\\w+", Component.text("[owner-name]"))
     };
 
     private final CommandValidator<Party, ?> validator;
 
-    public JoinPartyForm(@NotNull PartyTracker partyTracker, @NotNull OfflinePlayerNamer playerNamer) {
-        super(Component.translatable("io.github.zap.party.command.join.usage"), Permissions.NONE, PARAMETERS);
+    public JoinPartyForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker,
+                         @NotNull OfflinePlayerNamer playerNamer) {
+        super(regularCommand, Component.translatable("io.github.zap.party.command.join.usage"), Permissions.NONE,
+                PARAMETERS);
         this.validator = new CommandValidator<>(((context, arguments, previousData) -> {
             if (partyTracker.getPartyForPlayer(previousData).isPresent()) {
                 return ValidationResult.of(false,

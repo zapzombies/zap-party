@@ -1,12 +1,13 @@
 package io.github.zap.party.command;
 
-import io.github.regularcommands.commands.CommandForm;
-import io.github.regularcommands.commands.Context;
-import io.github.regularcommands.converter.Parameter;
-import io.github.regularcommands.util.Permissions;
-import io.github.regularcommands.util.Validators;
-import io.github.regularcommands.validator.CommandValidator;
-import io.github.regularcommands.validator.ValidationResult;
+import io.github.zap.regularcommands.commands.CommandForm;
+import io.github.zap.regularcommands.commands.Context;
+import io.github.zap.regularcommands.commands.RegularCommand;
+import io.github.zap.regularcommands.converter.Parameter;
+import io.github.zap.regularcommands.util.Permissions;
+import io.github.zap.regularcommands.util.Validators;
+import io.github.zap.regularcommands.validator.CommandValidator;
+import io.github.zap.regularcommands.validator.ValidationResult;
 import io.github.zap.party.Party;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
@@ -22,14 +23,15 @@ public class PartySettingsForm extends CommandForm<Pair<Party, Object[]>> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
             new Parameter("settings"),
-            new Parameter(".*", "[setting-name]"),
-            new Parameter(".*", "[setting-value]")
+            new Parameter(".*", Component.text("[setting-name]")),
+            new Parameter(".*", Component.text("[setting-value]"))
     };
 
     private final CommandValidator<Pair<Party, Object[]>, ?> validator;
 
-    public PartySettingsForm(@NotNull PartyTracker partyTracker) {
-        super(Component.translatable("io.github.zap.party.command.settings.usage"), Permissions.NONE, PARAMETERS);
+    public PartySettingsForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker) {
+        super(regularCommand, Component.translatable("io.github.zap.party.command.settings.usage"),
+                Permissions.NONE, PARAMETERS);
 
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(previousData);
@@ -50,11 +52,6 @@ public class PartySettingsForm extends CommandForm<Pair<Party, Object[]>> {
             return ValidationResult.of(true, null,
                     Pair.of(party, Arrays.copyOfRange(arguments, 1, arguments.length)));
         }, Validators.PLAYER_EXECUTOR);
-    }
-
-    @Override
-    public boolean canStylize() {
-        return true;
     }
 
     @Override
