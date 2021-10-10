@@ -25,4 +25,9 @@ public final class ConfigNames {
      */
     public final static String SPY_PARTY_PREFIX = "spyPartyPrefix";
 
+    /**
+     * Whether the {@link org.bukkit.command.ConsoleCommandSender} should automatically spy on party messages
+     */
+    public final static String AUTO_CONSOLE_SPY = "autoConsoleSpy";
+
 }

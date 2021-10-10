@@ -17,6 +17,7 @@ import io.github.zap.party.plugin.config.ConfigNames;
 import io.github.zap.party.plugin.exception.LoadFailureException;
 import io.github.zap.party.settings.PartySettings;
 import io.github.zap.party.tracker.PartyTracker;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -79,6 +80,8 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
     public final static String SPY_PARTY_PREFIX = "<black><lang:io.github.zap.party.chat.prefix.party> " +
             "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow> ";
 
+    public final static boolean AUTO_CONSOLE_SPY = true;
+
     private PartyTracker partyTracker;
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -135,6 +138,7 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
         config.addDefault(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG, DEFAULT_LOCALE.toLanguageTag());
         config.addDefault(ConfigNames.PARTY_PREFIX, PARTY_PREFIX);
         config.addDefault(ConfigNames.SPY_PARTY_PREFIX, SPY_PARTY_PREFIX);
+        config.addDefault(ConfigNames.AUTO_CONSOLE_SPY, AUTO_CONSOLE_SPY);
 
         config.options().copyDefaults(true);
         this.saveConfig();
@@ -471,12 +475,17 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
+        boolean consoleSpies = this.getConfig().getBoolean(ConfigNames.AUTO_CONSOLE_SPY, AUTO_CONSOLE_SPY);
         this.commandManager.registerCommand(new PartyCommand(this.commandManager, new BasicPageBuilder(),
-                this.partyTracker,
-                owner -> new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
-                        new TimedInvitationManager(this, playerNamer), new ArrayList<>(), partyLister,
-                        playerNamer),
-                new SingleTextColorOfflinePlayerNamer(null), renderer, this.defaultLocale));
+                this.partyTracker, owner ->  {
+            List<Audience> spies = new ArrayList<>();
+            if (consoleSpies) {
+                spies.add(Bukkit.getConsoleSender());
+            }
+            
+            return new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
+                        new TimedInvitationManager(this, playerNamer), spies, partyLister, playerNamer);
+            }, new SingleTextColorOfflinePlayerNamer(null), renderer, this.defaultLocale));
     }
 
     @Override
