@@ -482,7 +482,7 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
             if (consoleSpies) {
                 spies.add(Bukkit.getConsoleSender());
             }
-            
+
             return new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
                         new TimedInvitationManager(this, playerNamer), spies, partyLister, playerNamer);
             }, new SingleTextColorOfflinePlayerNamer(null), renderer, this.defaultLocale));
