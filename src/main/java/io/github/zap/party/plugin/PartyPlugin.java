@@ -20,6 +20,7 @@ import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.renderer.TranslatableComponentRenderer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.commons.lang3.time.StopWatch;
@@ -101,7 +102,7 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
             initTranslations(GlobalTranslator.get(), TRANSLATION_REGISTRY_KEY);
             initPartyTracker();
             initAsyncChatEventHandler(MiniMessage.get());
-            initCommands(GlobalTranslator.get());
+            initCommands(GlobalTranslator.get(), GlobalTranslator.renderer());
 
             timer.stop();
             this.getLogger().info("Enabled successfully; ~" + timer.getTime() + "ms elapsed.");
@@ -458,8 +459,10 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
     /**
      * Registers the {@link CommandManager}.
      * @param globalTranslator The {@link GlobalTranslator} for the {@link CommandManager}
+     * @param renderer A {@link TranslatableComponentRenderer} to render messages
      */
-    private void initCommands(@NotNull GlobalTranslator globalTranslator) {
+    private void initCommands(@NotNull GlobalTranslator globalTranslator,
+                              @NotNull TranslatableComponentRenderer<Locale> renderer) {
         this.commandManager = new CommandManager(this, globalTranslator);
 
         Random random = new Random();
@@ -468,11 +471,12 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.commandManager.registerCommand(new PartyCommand(commandManager, new BasicPageBuilder(), this.partyTracker,
+        this.commandManager.registerCommand(new PartyCommand(this.commandManager, new BasicPageBuilder(),
+                this.partyTracker,
                 owner -> new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
                         new TimedInvitationManager(this, playerNamer), new ArrayList<>(), partyLister,
                         playerNamer),
-                new SingleTextColorOfflinePlayerNamer(null)));
+                new SingleTextColorOfflinePlayerNamer(null), renderer, this.defaultLocale));
     }
 
     @Override

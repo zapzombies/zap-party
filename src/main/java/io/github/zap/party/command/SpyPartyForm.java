@@ -2,7 +2,7 @@ package io.github.zap.party.command;
 
 import io.github.zap.party.Party;
 import io.github.zap.party.audience.PlayerAudience;
-import io.github.zap.party.member.PartyMember;
+import io.github.zap.party.audience.PreRenderedAudience;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import io.github.zap.regularcommands.commands.CommandForm;
@@ -14,15 +14,16 @@ import io.github.zap.regularcommands.util.Validators;
 import io.github.zap.regularcommands.validator.CommandValidator;
 import io.github.zap.regularcommands.validator.ValidationResult;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.renderer.TranslatableComponentRenderer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Optional;
 
 public class SpyPartyForm extends CommandForm<Party> {
@@ -36,8 +37,13 @@ public class SpyPartyForm extends CommandForm<Party> {
 
     private final OfflinePlayerNamer playerNamer;
 
+    private final TranslatableComponentRenderer<Locale> renderer;
+
+    private final Locale consoleLocale;
+
     public SpyPartyForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker,
-                        @NotNull OfflinePlayerNamer playerNamer) {
+                        @NotNull OfflinePlayerNamer playerNamer,
+                        @NotNull TranslatableComponentRenderer<Locale> renderer, @NotNull Locale consoleLocale) {
         super(regularCommand, Component.translatable("io.github.zap.party.command.spy.usage"),
                 Permissions.OPERATOR, PARAMETERS);
 
@@ -76,6 +82,8 @@ public class SpyPartyForm extends CommandForm<Party> {
                             NamedTextColor.RED, toSpyComponent), null);
         }, Validators.ANY);
         this.playerNamer = playerNamer;
+        this.renderer = renderer;
+        this.consoleLocale = consoleLocale;
     }
 
     @Override
@@ -93,6 +101,9 @@ public class SpyPartyForm extends CommandForm<Party> {
         Audience spy;
         if (context.getSender() instanceof Player player) {
             spy = new PlayerAudience(player);
+        }
+        else if (Bukkit.getConsoleSender() == context.getSender()) {
+            spy = new PreRenderedAudience(context.getSender(), this.renderer, this.consoleLocale);
         }
         else {
             spy = context.getSender();
