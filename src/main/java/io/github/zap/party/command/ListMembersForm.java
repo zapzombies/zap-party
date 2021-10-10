@@ -24,7 +24,7 @@ import java.util.Optional;
 public class ListMembersForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("list")
+            new Parameter("list", Component.text("list"))
     };
 
     private final CommandValidator<Party, ?> validator;

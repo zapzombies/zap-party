@@ -25,7 +25,7 @@ import java.util.Optional;
 public class CreatePartyForm extends CommandForm<Void> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("create")
+            new Parameter("create", Component.text("create"))
     };
 
     private final PartyTracker partyTracker;

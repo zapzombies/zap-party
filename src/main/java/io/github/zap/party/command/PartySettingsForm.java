@@ -22,9 +22,9 @@ import java.util.Optional;
 public class PartySettingsForm extends CommandForm<Pair<Party, Object[]>> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("settings"),
-            new Parameter(".*", Component.text("[setting-name]")),
-            new Parameter(".*", Component.text("[setting-value]"))
+            new Parameter("settings", Component.text("settings")),
+            new Parameter(".*", Component.text("[setting-name]"), false),
+            new Parameter(".*", Component.text("[setting-value]"), false)
     };
 
     private final CommandValidator<Pair<Party, Object[]>, ?> validator;

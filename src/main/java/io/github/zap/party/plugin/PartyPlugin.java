@@ -1,5 +1,6 @@
 package io.github.zap.party.plugin;
 
+import io.github.zap.commons.ZapPlugin;
 import io.github.zap.regularcommands.commands.BasicPageBuilder;
 import io.github.zap.regularcommands.commands.CommandManager;
 import io.github.zap.party.Party;
@@ -16,7 +17,6 @@ import io.github.zap.party.plugin.config.ConfigNames;
 import io.github.zap.party.plugin.exception.LoadFailureException;
 import io.github.zap.party.settings.PartySettings;
 import io.github.zap.party.tracker.PartyTracker;
-import io.papermc.paper.text.PaperComponents;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -25,7 +25,6 @@ import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.commons.lang3.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -45,6 +44,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +59,7 @@ import java.util.stream.Stream;
  * ZAP implementation of {@link ZAPParty}.
  */
 @SuppressWarnings("unused")
-public class PartyPlugin extends JavaPlugin implements ZAPParty {
+public class PartyPlugin extends ZapPlugin implements ZAPParty {
 
     public final static Key TRANSLATION_REGISTRY_KEY
             = Key.key("io.github.zap", "party.translation.registry");
@@ -73,6 +73,9 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
     public final static String DEFAULT_TRANSLATIONS_DIRECTORY = "translations/";
 
     public final static String PARTY_PREFIX = "<blue><lang:io.github.zap.party.chat.prefix.party> " +
+            "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow> ";
+
+    public final static String SPY_PARTY_PREFIX = "<black><lang:io.github.zap.party.chat.prefix.party> " +
             "<dark_gray><lang:io.github.zap.party.chat.prefix.rightarrow> ";
 
     private PartyTracker partyTracker;
@@ -90,7 +93,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
     private boolean defaultLocaleTranslationsLoaded = false;
 
     @Override
-    public void onEnable() {
+    public void doEnable() {
         try {
             StopWatch timer = StopWatch.createStarted();
 
@@ -111,7 +114,12 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
     }
 
     @Override
-    public void onDisable() {
+    public void doLoad() {
+
+    }
+
+    @Override
+    public void doDisable() {
         GlobalTranslator.get().removeSource(this.translationRegistry);
     }
 
@@ -125,6 +133,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
                 Paths.get(this.getDataFolder().getPath(), LOCALIZATION_DIRECTORY_NAME).normalize().toString());
         config.addDefault(ConfigNames.DEFAULT_LOCALE_LANGUAGE_TAG, DEFAULT_LOCALE.toLanguageTag());
         config.addDefault(ConfigNames.PARTY_PREFIX, PARTY_PREFIX);
+        config.addDefault(ConfigNames.SPY_PARTY_PREFIX, SPY_PARTY_PREFIX);
 
         config.options().copyDefaults(true);
         this.saveConfig();
@@ -442,7 +451,7 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
     private void initAsyncChatEventHandler(@NotNull MiniMessage miniMessage) {
         this.asyncChatHandler = new BasicAsyncChatHandler(this, this.partyTracker,
                 miniMessage.parse(this.getConfig().getString(ConfigNames.PARTY_PREFIX, PARTY_PREFIX)),
-                List.of(Bukkit.getConsoleSender()));
+                miniMessage.parse(this.getConfig().getString(ConfigNames.SPY_PARTY_PREFIX, SPY_PARTY_PREFIX)));
         Bukkit.getPluginManager().registerEvents(this.asyncChatHandler, this);
     }
 
@@ -461,7 +470,8 @@ public class PartyPlugin extends JavaPlugin implements ZAPParty {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.commandManager.registerCommand(new PartyCommand(commandManager, new BasicPageBuilder(), this.partyTracker,
                 owner -> new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
-                        new TimedInvitationManager(this, playerNamer), partyLister, playerNamer),
+                        new TimedInvitationManager(this, playerNamer), new ArrayList<>(), partyLister,
+                        playerNamer),
                 new SingleTextColorOfflinePlayerNamer(null)));
     }
 

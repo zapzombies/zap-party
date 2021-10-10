@@ -23,19 +23,13 @@ import java.util.Optional;
  */
 public class BasicAsyncChatHandler implements AsyncChatHandler {
 
-    public final static AudienceInclusionTester DEFAULT_AUDIENCE_INCLUSTION_TESTER = audience -> false;
-
-    public final static Collection<Audience> DEFAULT_INCLUDED_AUDIENCES = Collections.emptySet();
-
     private final Plugin plugin;
 
     private final PartyTracker partyTracker;
 
     private final Component partyPrefix;
 
-    private final AudienceInclusionTester inclusionTester;
-
-    private final Collection<Audience> includedAudiences;
+    private final Component spyPartyPrefix;
 
     /**
      * Creates a simple party chat handler that deals with parties being muted and party chat along with the ability to
@@ -43,55 +37,14 @@ public class BasicAsyncChatHandler implements AsyncChatHandler {
      * @param plugin The plugin this chat handler belongs to
      * @param partyTracker A tracker for parties to handle {@link AsyncChatEvent}s with
      * @param partyPrefix A prefix for party chat messages
-     * @param inclusionTester The tester for {@link Audience} that will receive party chat messages
-     * @param includedAudiences {@link Audience}s to add to party chat messages
+     * @param spyPartyPrefix A prefix for spied party chat messages
      */
     public BasicAsyncChatHandler(@NotNull Plugin plugin, @NotNull PartyTracker partyTracker,
-                                 @NotNull Component partyPrefix, @NotNull AudienceInclusionTester inclusionTester,
-                                 @NotNull Collection<Audience> includedAudiences) {
+                                 @NotNull Component partyPrefix, @NotNull Component spyPartyPrefix) {
         this.plugin = plugin;
         this.partyTracker = partyTracker;
         this.partyPrefix = partyPrefix;
-        this.inclusionTester = inclusionTester;
-        this.includedAudiences = includedAudiences;
-    }
-
-    /**
-     * Creates a simple party chat handler that deals with parties being muted and party chat along with the ability to
-     * test if certain audiences may be included.
-     * @param plugin The plugin this chat handler belongs to
-     * @param partyTracker A tracker for parties to handle {@link AsyncChatEvent}s with
-     * @param partyPrefix A prefix for party chat messages
-     * @param inclusionTester The tester for {@link Audience} that will receive party chat messages
-     */
-    @SuppressWarnings("unused")
-    public BasicAsyncChatHandler(@NotNull Plugin plugin, @NotNull PartyTracker partyTracker,
-                                 @NotNull Component partyPrefix, @NotNull AudienceInclusionTester inclusionTester) {
-        this(plugin, partyTracker, partyPrefix, inclusionTester, DEFAULT_INCLUDED_AUDIENCES);
-    }
-
-    /**
-     * Creates a simple party chat handler that deals with parties being muted and party chat along with the ability to
-     * include certain audiences for party chat messages.
-     * @param plugin The plugin this chat handler belongs to
-     * @param partyTracker A tracker for parties to handle {@link AsyncChatEvent}s with
-     * @param partyPrefix A prefix for party chat messages
-     * @param includedAudiences {@link Audience}s to add to party chat messages
-     */
-    public BasicAsyncChatHandler(@NotNull Plugin plugin, @NotNull PartyTracker partyTracker,
-                                 @NotNull Component partyPrefix, @NotNull Collection<Audience> includedAudiences) {
-        this(plugin, partyTracker, partyPrefix, DEFAULT_AUDIENCE_INCLUSTION_TESTER, includedAudiences);
-    }
-
-    /**
-     * Creates a simple party chat handler that deals with parties being muted and party chat.
-     * @param plugin The plugin this chat handler belongs to
-     * @param partyTracker A tracker for parties to handle {@link AsyncChatEvent}s with
-     * @param partyPrefix A prefix for party chat messages
-     */
-    public BasicAsyncChatHandler(@NotNull Plugin plugin, @NotNull PartyTracker partyTracker,
-                                 @NotNull Component partyPrefix) {
-        this(plugin, partyTracker, partyPrefix, DEFAULT_AUDIENCE_INCLUSTION_TESTER, DEFAULT_INCLUDED_AUDIENCES);
+        this.spyPartyPrefix = spyPartyPrefix;
     }
 
     @EventHandler
@@ -127,8 +80,7 @@ public class BasicAsyncChatHandler implements AsyncChatHandler {
             Iterator<Audience> iterator = event.viewers().iterator();
             while (iterator.hasNext()) {
                 Audience audience = iterator.next();
-                if (this.inclusionTester.include(audience)
-                        || (!(audience instanceof Player player && party.hasMember(player)))) {
+                if (!(audience instanceof Player player && party.hasMember(player))) {
                     try {
                         iterator.remove();
                     }
@@ -140,7 +92,7 @@ public class BasicAsyncChatHandler implements AsyncChatHandler {
                 }
             }
 
-            for (Audience audience : this.includedAudiences) {
+            for (Audience audience : party.getSpyAudiences()) {
                 try {
                     event.viewers().add(audience);
                 }
@@ -152,9 +104,16 @@ public class BasicAsyncChatHandler implements AsyncChatHandler {
             }
 
             ChatRenderer oldRenderer = event.renderer();
-            event.renderer((source, sourceDisplayName, message, viewer) ->
-                    Component.translatable("io.github.zap.party.chat.message.format", this.partyPrefix,
-                            oldRenderer.render(source, sourceDisplayName, message, viewer)));
+            event.renderer((source, sourceDisplayName, message, viewer) -> {
+                if (party.getSpyAudiences().contains(viewer)) {
+                    return Component.translatable("io.github.zap.party.chat.message.format", this.spyPartyPrefix,
+                            oldRenderer.render(source, sourceDisplayName, message, viewer));
+                }
+                else {
+                    return Component.translatable("io.github.zap.party.chat.message.format", this.partyPrefix,
+                            oldRenderer.render(source, sourceDisplayName, message, viewer));
+                }
+            });
         }
     }
 

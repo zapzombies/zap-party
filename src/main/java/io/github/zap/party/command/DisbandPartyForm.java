@@ -22,7 +22,7 @@ import java.util.Optional;
 public class DisbandPartyForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("disband")
+            new Parameter("disband", Component.text("disband"), false)
     };
 
     private final CommandValidator<Party, ?> validator;

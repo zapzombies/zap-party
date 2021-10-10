@@ -23,8 +23,8 @@ import org.jetbrains.annotations.NotNull;
 public class InvitePlayerForm extends CommandForm<Player> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("invite"),
-            new Parameter("\\w+", Component.text("[player-name]"))
+            new Parameter("invite", Component.text("invite")),
+            new Parameter("\\w+", Component.text("[player-name]"), false)
     };
 
     private final static CommandValidator<Player, ?> VALIDATOR

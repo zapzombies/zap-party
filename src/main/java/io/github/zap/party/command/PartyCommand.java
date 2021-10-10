@@ -27,6 +27,7 @@ public class PartyCommand extends RegularCommand {
         addForm(new PartyMuteForm(this, partyTracker, commandPlayerNamer));
         addForm(new KickMemberForm(this, partyTracker, commandPlayerNamer));
         addForm(new KickOfflineMembersForm(this, partyTracker));
+        addForm(new SpyPartyForm(this, partyTracker, commandPlayerNamer));
         addForm(new TransferPartyForm(this, partyTracker, commandPlayerNamer));
         addForm(new DisbandPartyForm(this, partyTracker));
     }

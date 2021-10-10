@@ -26,8 +26,8 @@ import java.util.Optional;
 public class TransferPartyForm extends CommandForm<Pair<Party, Player>> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("transfer"),
-            new Parameter("\\w+", Component.text("[player-name]"))
+            new Parameter("transfer", Component.text("transfer")),
+            new Parameter("\\w+", Component.text("[player-name]"), false)
     };
 
     private final CommandValidator<Pair<Party, Player>, ?> validator;

@@ -32,6 +32,7 @@ import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.OngoingStubbing;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -94,15 +95,16 @@ public class PartyAsyncChatTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.party = new Party(random, new PartyMember(this.owner),
-                new PartySettings(), PartyMember::new, new TimedInvitationManager(plugin, playerNamer), partyLister,
-                playerNamer);
+                new PartySettings(), PartyMember::new, new TimedInvitationManager(plugin, playerNamer),
+                Collections.emptyList(), partyLister, playerNamer);
 
         PartyTracker partyTracker = new PartyTracker();
         partyTracker.trackParty(this.party);
-        this.asyncChatHandler = new BasicAsyncChatHandler(plugin, partyTracker, TextComponent.ofChildren(
-           Component.text("Party ", NamedTextColor.BLUE),
-           Component.text("> ", NamedTextColor.DARK_GRAY)
-        ));
+        Component prefix = TextComponent.ofChildren(
+                Component.text("Party ", NamedTextColor.BLUE),
+                Component.text("> ", NamedTextColor.DARK_GRAY)
+        );
+        this.asyncChatHandler = new BasicAsyncChatHandler(plugin, partyTracker, prefix, prefix);
     }
 
     @Test

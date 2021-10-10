@@ -13,6 +13,7 @@ import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +26,8 @@ import java.util.Optional;
 public class PartyMuteForm extends CommandForm<OfflinePlayer> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("mute"),
-            new Parameter("\\w+", Component.text("[player-name]"), "")
+            new Parameter("mute", Component.text("mute")),
+            new Parameter("\\w+", Component.text("[player-name]"), StringUtils.EMPTY)
     };
 
     private final PartyTracker partyTracker;

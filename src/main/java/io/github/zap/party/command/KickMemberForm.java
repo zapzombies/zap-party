@@ -13,6 +13,7 @@ import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.tracker.PartyTracker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -22,23 +23,20 @@ import java.util.Optional;
 /**
  * Kicks a member from the party
  */
-public class KickMemberForm extends CommandForm<OfflinePlayer> {
+public class KickMemberForm extends CommandForm<Pair<Party, OfflinePlayer>> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("kick"),
-            new Parameter("\\w+", Component.text("[player-name]"))
+            new Parameter("kick", Component.text("kick")),
+            new Parameter("\\w+", Component.text("[player-name]"), false)
     };
 
-    private final PartyTracker partyTracker;
-
-    private final CommandValidator<OfflinePlayer, ?> validator;
+    private final CommandValidator<Pair<Party, OfflinePlayer>, ?> validator;
 
     public KickMemberForm(@NotNull RegularCommand regularCommand, @NotNull PartyTracker partyTracker,
                           @NotNull OfflinePlayerNamer playerNamer) {
         super(regularCommand, Component.translatable("io.github.zap.party.command.kick.usage"), Permissions.NONE,
                 PARAMETERS);
 
-        this.partyTracker = partyTracker;
         this.validator = new CommandValidator<>((context, arguments, previousData) -> {
             Optional<Party> partyOptional = partyTracker.getPartyForPlayer(previousData);
             if (partyOptional.isEmpty()) {
@@ -72,27 +70,25 @@ public class KickMemberForm extends CommandForm<OfflinePlayer> {
             Optional<Party> toKickPartyOptional = partyTracker.getPartyForPlayer(toKick);
             if (toKickPartyOptional.isPresent()) {
                 if (party.equals(toKickPartyOptional.get())) {
-                    return ValidationResult.of(true, null, toKick);
+                    return ValidationResult.of(true, null, Pair.of(party, toKick));
                 }
             }
 
             Component toKickComponent = playerNamer.name(toKick);
-
             return ValidationResult.of(false,
                     Component.translatable("io.github.zap.party.command.notinyourparty",
                             NamedTextColor.RED, toKickComponent), null);
-
         }, Validators.PLAYER_EXECUTOR);
     }
 
     @Override
-    public CommandValidator<OfflinePlayer, ?> getValidator(Context context, Object[] arguments) {
+    public CommandValidator<Pair<Party, OfflinePlayer>, ?> getValidator(Context context, Object[] arguments) {
         return this.validator;
     }
 
     @Override
-    public Component execute(Context context, Object[] arguments, OfflinePlayer data) {
-        this.partyTracker.getPartyForPlayer(data).ifPresent(party -> party.removeMember(data, true));
+    public Component execute(Context context, Object[] arguments, Pair<Party, OfflinePlayer> data) {
+        data.getLeft().removeMember(data.getRight(), true);
         return Component.empty();
     }
 

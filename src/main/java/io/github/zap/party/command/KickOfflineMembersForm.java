@@ -22,7 +22,7 @@ import java.util.Optional;
 public class KickOfflineMembersForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("kickoffline")
+            new Parameter("kickoffline", Component.text("kickoffline"))
     };
 
     private final CommandValidator<Party, ?> validator;

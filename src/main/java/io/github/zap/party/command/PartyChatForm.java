@@ -21,7 +21,7 @@ import java.util.Optional;
 public class PartyChatForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("chat")
+            new Parameter("chat", Component.text("chat"))
     };
 
     private final CommandValidator<Party, ?> validator;

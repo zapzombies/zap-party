@@ -26,8 +26,8 @@ import java.util.Optional;
 public class JoinPartyForm extends CommandForm<Party> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("join"),
-            new Parameter("\\w+", Component.text("[owner-name]"))
+            new Parameter("join", Component.text("join")),
+            new Parameter("\\w+", Component.text("[owner-name]"), false)
     };
 
     private final CommandValidator<Party, ?> validator;

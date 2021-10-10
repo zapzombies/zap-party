@@ -24,6 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
@@ -85,7 +86,7 @@ public class PartyTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
         this.party = new Party(new Random(), new PartyMember(this.owner),
                 new PartySettings(), PartyMember::new, new TimedInvitationManager(this.plugin, playerNamer),
-                partyLister, playerNamer);
+                Collections.emptyList(), partyLister, playerNamer);
     }
 
     @Test

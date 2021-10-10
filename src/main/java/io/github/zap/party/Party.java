@@ -7,6 +7,7 @@ import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.member.PartyMemberBuilder;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
@@ -46,6 +47,8 @@ public class Party {
 
     private final InvitationManager invitationManager;
 
+    private final List<Audience> spyAudiences;
+
     private final PartyLister partyLister;
 
     private final OfflinePlayerNamer playerNamer;
@@ -59,19 +62,22 @@ public class Party {
      * @param partySettings The settings for the party
      * @param partyMemberBuilder A builder for new party members
      * @param invitationManager The invitation manager for this party
+     * @param spyAudiences A {@link List} of {@link Audience}s that will spy on any party events
      * @param partyLister A lister for party list components
      * @param playerNamer A namer for {@link Component} names of players
      */
     public Party(@NotNull Random random, @NotNull PartyMember owner, @NotNull PartySettings partySettings,
                  @NotNull PartyMemberBuilder partyMemberBuilder, @NotNull InvitationManager invitationManager,
-                 @NotNull PartyLister partyLister, @NotNull OfflinePlayerNamer playerNamer) {
+                 @NotNull List<Audience> spyAudiences, @NotNull PartyLister partyLister,
+                 @NotNull OfflinePlayerNamer playerNamer) {
         this.random = random;
         this.owner = owner;
         this.partySettings = partySettings;
         this.partyMemberBuilder = partyMemberBuilder;
         this.invitationManager = invitationManager;
-        this.playerNamer = playerNamer;
+        this.spyAudiences = spyAudiences;
         this.partyLister = partyLister;
+        this.playerNamer = playerNamer;
 
         this.members.put(owner.getOfflinePlayer().getUniqueId(), owner);
     }
@@ -337,11 +343,19 @@ public class Party {
     }
 
     /**
-     * Gets the invitation manager for this party
-     * @return The invitation manager
+     * Gets the {@link InvitationManager} for this party
+     * @return The {@link InvitationManager}
      */
     public @NotNull InvitationManager getInvitationManager() {
         return invitationManager;
+    }
+
+    /**
+     * Gets the {@link List} of spying {@link Audience}s
+     * @return The {@link List} of spying {@link Audience}s
+     */
+    public @NotNull List<Audience> getSpyAudiences() {
+        return spyAudiences;
     }
 
     /**
@@ -431,6 +445,9 @@ public class Party {
     public void broadcastMessage(@NotNull Component message) {
         for (PartyMember member : this.members.values()) {
             member.getPlayerIfOnline().ifPresent(player -> player.sendMessage(message));
+        }
+        for (Audience audience : this.spyAudiences) {
+            audience.sendMessage(message);
         }
     }
 

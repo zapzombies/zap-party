@@ -20,4 +20,9 @@ public final class ConfigNames {
      */
     public final static String PARTY_PREFIX = "partyPrefix";
 
+    /**
+     * The prefix for spied party messages
+     */
+    public final static String SPY_PARTY_PREFIX = "spyPartyPrefix";
+
 }

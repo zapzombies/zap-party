@@ -23,7 +23,7 @@ import java.util.Optional;
 public class LeavePartyForm extends CommandForm<Void> {
 
     private final static Parameter[] PARAMETERS = new Parameter[] {
-            new Parameter("leave")
+            new Parameter("leave", Component.text("leave"))
     };
 
     private final PartyTracker partyTracker;

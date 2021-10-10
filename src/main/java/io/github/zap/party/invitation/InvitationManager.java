@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Manages a {@link io.github.zap.party.party.Party}'s invitations
+ * Manages a {@link io.github.zap.party.Party}'s invitations
  */
 public interface InvitationManager {
 
