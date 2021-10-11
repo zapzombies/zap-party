@@ -1,6 +1,7 @@
 package io.github.zap.party;
 
 import com.ibm.icu.text.PluralRules;
+import io.github.zap.party.audience.PlayerAudience;
 import io.github.zap.party.invitation.InvitationManager;
 import io.github.zap.party.list.PartyLister;
 import io.github.zap.party.member.PartyMember;
@@ -113,6 +114,7 @@ public class Party {
         PartyMember partyMember = this.partyMemberBuilder.createPartyMember(player);
         this.members.put(memberUUID, partyMember);
         this.invitationManager.removeInvitation(player);
+        this.spyAudiences.remove(new PlayerAudience(player));
 
         this.broadcastMessage(Component.translatable("io.github.zap.party.member.joined", NamedTextColor.YELLOW,
                 player.displayName().colorIfAbsent(NamedTextColor.WHITE)));

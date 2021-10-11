@@ -468,6 +468,7 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
     private void initCommands(@NotNull GlobalTranslator globalTranslator,
                               @NotNull TranslatableComponentRenderer<Locale> renderer) {
         this.commandManager = new CommandManager(this, globalTranslator);
+        this.commandManager.registerDefaultTranslations();
 
         Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();

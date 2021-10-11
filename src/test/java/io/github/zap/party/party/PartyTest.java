@@ -1,6 +1,7 @@
 package io.github.zap.party.party;
 
 import io.github.zap.party.Party;
+import io.github.zap.party.audience.PlayerAudience;
 import io.github.zap.party.invitation.TimedInvitationManager;
 import io.github.zap.party.list.BasicPartyLister;
 import io.github.zap.party.list.PartyLister;
@@ -8,6 +9,7 @@ import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import io.github.zap.party.namer.SingleTextColorOfflinePlayerNamer;
 import io.github.zap.party.settings.PartySettings;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
@@ -23,8 +25,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
@@ -38,6 +42,8 @@ public class PartyTest {
 
     private final UUID bigDipUUID = UUID.fromString("a7db1c97-6064-46a1-91c6-77a4c974b692");
 
+    private final UUID joshUUID = UUID.fromString("31ee3877-dbd8-423a-95e4-9181b8acfe74");
+
     private Plugin plugin;
 
     private Server server;
@@ -46,9 +52,9 @@ public class PartyTest {
 
     private Party party;
 
-    private Player owner;
+    private Player owner, member, spy;
 
-    private Player member;
+    private Audience spyAudience;
 
     @BeforeEach
     public void setup() {
@@ -73,6 +79,13 @@ public class PartyTest {
         Mockito.when(this.member.getServer()).thenReturn(this.server);
         Mockito.when(this.member.locale()).thenReturn(Locale.ENGLISH);
 
+        this.spy = Mockito.mock(Player.class);
+        Mockito.when(this.spy.getUniqueId()).thenReturn(joshUUID);
+        Mockito.when(this.spy.displayName()).thenReturn(Component.text("SimpleCactus"));
+        Mockito.when(this.spy.getServer()).thenReturn(this.server);
+        Mockito.when(this.spy.locale()).thenReturn(Locale.ENGLISH);
+        this.spyAudience = new PlayerAudience(spy);
+
         Mockito.when(this.server.getOfflinePlayer(this.owner.getUniqueId())).thenReturn(this.owner);
         Mockito.when(this.server.getOfflinePlayer(this.member.getUniqueId())).thenReturn(this.member);
 
@@ -84,9 +97,9 @@ public class PartyTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.party = new Party(new Random(), new PartyMember(this.owner),
-                new PartySettings(), PartyMember::new, new TimedInvitationManager(this.plugin, playerNamer),
-                Collections.emptyList(), partyLister, playerNamer);
+        this.party = new Party(new Random(), new PartyMember(this.owner), new PartySettings(), PartyMember::new,
+                new TimedInvitationManager(this.plugin, playerNamer),
+                new ArrayList<>(List.of(this.spyAudience)), partyLister, playerNamer);
     }
 
     @Test
@@ -241,6 +254,13 @@ public class PartyTest {
         Mockito.when(reborn.getUniqueId()).thenReturn(this.bigDipUUID);
 
         Assertions.assertTrue(this.party.getInvitationManager().hasInvitation(reborn));
+    }
+
+    @Test
+    public void testSpyRemovalAfterInvitation() {
+        this.party.addMember(this.spy);
+
+        Assertions.assertFalse(this.party.getSpyAudiences().contains(this.spyAudience));
     }
 
     @Test

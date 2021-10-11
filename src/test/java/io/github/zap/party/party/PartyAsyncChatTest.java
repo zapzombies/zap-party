@@ -31,8 +31,8 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.OngoingStubbing;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +52,8 @@ public class PartyAsyncChatTest {
     private Party party;
 
     private Player owner, member, noob;
+
+    private Audience spy;
 
     @BeforeAll
     public static void start() {
@@ -87,6 +89,8 @@ public class PartyAsyncChatTest {
         OngoingStubbing<Collection<? extends Player>> ongoingStubbing = Mockito.when(Bukkit.getServer().getOnlinePlayers());
         ongoingStubbing.thenReturn(List.of(this.owner, this.member, this.noob)); // why does java hate me? why can't I put it on one line?
 
+        this.spy = Mockito.mock(Audience.class);
+
         Plugin plugin = Mockito.mock(Plugin.class);
         Random random = new Random();
         OfflinePlayerNamer playerNamer = new SingleTextColorOfflinePlayerNamer();
@@ -94,9 +98,9 @@ public class PartyAsyncChatTest {
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.GREEN),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.RED),
                 new SingleTextColorOfflinePlayerNamer(NamedTextColor.BLUE));
-        this.party = new Party(random, new PartyMember(this.owner),
-                new PartySettings(), PartyMember::new, new TimedInvitationManager(plugin, playerNamer),
-                Collections.emptyList(), partyLister, playerNamer);
+        this.party = new Party(random, new PartyMember(this.owner), new PartySettings(), PartyMember::new,
+                new TimedInvitationManager(plugin, playerNamer), new ArrayList<>(List.of(this.spy)), partyLister,
+                playerNamer);
 
         PartyTracker partyTracker = new PartyTracker();
         partyTracker.trackParty(this.party);
@@ -150,7 +154,7 @@ public class PartyAsyncChatTest {
         this.asyncChatHandler.onAsyncChat(event);
 
         Assertions.assertFalse(event.isCancelled());
-        Assertions.assertEquals(Set.of(this.owner, this.member), event.viewers());
+        Assertions.assertEquals(Set.of(this.owner, this.member, this.spy), event.viewers());
         for (Audience audience : event.viewers()) {
             Component oldMessage = originalRenderer.render(this.member, this.member.displayName(),
                     event.originalMessage(), audience);
@@ -248,6 +252,34 @@ public class PartyAsyncChatTest {
         Assertions.assertTrue(event.isCancelled());
         Mockito.verify(this.member, Mockito.times(counts[0] + 1))
                 .sendMessage(ArgumentMatchers.any(Component.class));
+    }
+
+    @Test
+    public void testSpyWhenOwnerNotInPartyChat() {
+        Component originalMessage = Component.text("Hello, World!");
+        AsyncChatEvent event = new AsyncChatEvent(true, this.owner,
+                new HashSet<>(Set.of(this.owner, this.member, this.noob)),
+                Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
+        this.asyncChatHandler.onAsyncChat(event);
+
+        Assertions.assertFalse(event.viewers().contains(this.spy));
+    }
+
+    @Test
+    public void testSpyWhenOwnerInPartyChat() {
+        Optional<PartyMember> partyOwnerOptional = this.party.getOwner();
+
+        Assertions.assertTrue(partyOwnerOptional.isPresent());
+        PartyMember partyOwner = partyOwnerOptional.get();
+        partyOwner.setInPartyChat(true);
+
+        Component originalMessage = Component.text("Hello, World!");
+        AsyncChatEvent event = new AsyncChatEvent(true, this.owner,
+                new HashSet<>(Set.of(this.owner, this.member, this.noob)),
+                Mockito.mock(ChatRenderer.class), originalMessage, originalMessage);
+        this.asyncChatHandler.onAsyncChat(event);
+
+        Assertions.assertTrue(event.viewers().contains(this.spy));
     }
 
 }

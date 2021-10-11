@@ -19,7 +19,7 @@ dependencies {
     relocate("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT") {
         exclude("net.kyori", "adventure-api")
     }
-    relocate("io.github.zap:regular-commands:1.0.1-SNAPSHOT-1633760633")
+    relocate("io.github.zap:regular-commands:1.0.1-SNAPSHOT-1633911875")
     relocate("org.apache.commons:commons-lang3:3.12.0")
     relocate("com.ibm.icu:icu4j:69.1")
 }
