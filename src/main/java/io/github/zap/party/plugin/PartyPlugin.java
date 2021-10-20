@@ -1,6 +1,7 @@
 package io.github.zap.party.plugin;
 
 import io.github.zap.commons.ZapPlugin;
+import io.github.zap.party.audience.PreRenderedAudience;
 import io.github.zap.regularcommands.commands.BasicPageBuilder;
 import io.github.zap.regularcommands.commands.CommandManager;
 import io.github.zap.party.Party;
@@ -481,7 +482,7 @@ public class PartyPlugin extends ZapPlugin implements ZAPParty {
                 this.partyTracker, owner ->  {
             List<Audience> spies = new ArrayList<>();
             if (consoleSpies) {
-                spies.add(Bukkit.getConsoleSender());
+                spies.add(new PreRenderedAudience(Bukkit.getConsoleSender(), renderer, this.defaultLocale));
             }
 
             return new Party(random, new PartyMember(owner), new PartySettings(), PartyMember::new,
