@@ -4,7 +4,6 @@ import io.github.zap.party.Party;
 import io.github.zap.party.member.PartyMember;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 

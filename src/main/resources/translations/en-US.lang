@@ -1,0 +1,85 @@
+io.github.zap.locale=en-US
+
+io.github.zap.party.member.joined={0} has joined the party.
+io.github.zap.party.member.muted={0} has been muted.
+io.github.zap.party.member.unmuted={0} has been unmuted.
+io.github.zap.party.member.left.leaver=You have left the party.
+io.github.zap.party.member.removed.leaver=You have been removed from the party.
+io.github.zap.party.member.left.remaining={0} has left the party.
+io.github.zap.party.member.removed.remaining={0} has been removed from the party.
+
+io.github.zap.party.muted=The party has been muted.
+io.github.zap.party.unmuted=The party has been unmuted.
+
+io.github.zap.party.chat.member.muted=You are muted from speaking in the party chat.
+io.github.zap.party.chat.muted=The party chat is muted.
+
+io.github.zap.party.chat.prefix.party=Party
+io.github.zap.party.chat.prefix.rightarrow=>
+io.github.zap.party.chat.message.format={0}{1}
+
+io.github.zap.party.list.online=Online
+io.github.zap.party.list.offline=Offline
+io.github.zap.party.list.invites=Invites
+io.github.zap.party.list.colon=:
+io.github.zap.party.list.prefix.format={0}{1}
+io.github.zap.party.list.format={0} {1}
+
+io.github.zap.party.invite.here=here
+io.github.zap.party.invite.received.personal={0} has invited you to join their party! Click {1} to join! You have {2} seconds to accept!
+io.github.zap.party.invite.received.other={0} has invited you to join {1}'s party! Click {2} to join! You have {3} seconds to accept!
+io.github.zap.party.invite.created={0} has invited {1} to the party! They have {2} seconds to accept.
+io.github.zap.party.invite.to.expired=The invite to {0} has expired.
+io.github.zap.party.invite.from.expired=The invite to {0}'s party has expired.
+
+io.github.zap.party.kickoffline.newowner={0} has been removed from the party. The party has been transferred to {1}.
+io.github.zap.party.kickoffline.kicked.zero=No offline players have been kicked from the party.
+io.github.zap.party.kickoffline.kicked.one=One offline player has been kicked from the party.
+io.github.zap.party.kickoffline.kicked.two=Two offline players have been kicked from the party.
+io.github.zap.party.kickoffline.kicked.few={0} offline players have been kicked from the party.
+io.github.zap.party.kickoffline.kicked.many={0} offline players have been kicked from the party.
+io.github.zap.party.kickoffline.kicked.other={0} offline players have been kicked from the party.
+
+io.github.zap.party.disbanded=The party has been disbanded.
+
+io.github.zap.party.transferred=The party has been transferred from {0} to {1}.
+
+io.github.zap.party.command.sender.alreadyinparty=You are already in a party.
+io.github.zap.party.command.sender.notinparty=You are not currently in a party.
+io.github.zap.party.command.sender.notowner=You are not the party owner.
+io.github.zap.party.command.notinyourparty={0} is not in your party.
+io.github.zap.party.command.notinparty={0} is not in a party.
+io.github.zap.party.command.notonline={0} is currently not online.
+io.github.zap.party.command.notregistered={0} is not registered on the server.
+io.github.zap.party.command.create.usage=Creates a party.
+io.github.zap.party.command.create.success=Created a new party.
+io.github.zap.party.command.disband.usage=Disbands the party.
+io.github.zap.party.command.invite.usage=Invites a player to your party.
+io.github.zap.party.command.invite.nopermission=You do not have permission to invite players!.
+io.github.zap.party.command.invite.cannotinviteown=You cannot invite yourself to your own party.
+io.github.zap.party.command.join.usage=Joins a party.
+io.github.zap.party.command.join.alreadyinparty=You are already in a party! Leave it to join another one.
+io.github.zap.party.command.join.cannotjoinown=You cannot join your own party.
+io.github.zap.party.command.join.noinvite=You don't have an invite to {0}'s party.
+io.github.zap.party.command.kick.usage=Kicks a member from your party.
+io.github.zap.party.command.sender.cannotkickself=You cannot kick yourself from your party.
+io.github.zap.party.command.kickoffline.usage=Kicks offline members from your party.
+io.github.zap.party.command.leave.usage=Leaves your party.
+io.github.zap.party.command.list.usage=Lists all members in your party.
+io.github.zap.party.command.chat.usage=Toggles party chat.
+io.github.zap.party.command.chat.on=Turned party chat on!
+io.github.zap.party.command.chat.off=Turned party chat off!
+io.github.zap.party.command.mute.usage=Mutes a member in your party or the entire party.
+io.github.zap.party.command.mute.cannotmuteself=You cannot mute yourself.
+io.github.zap.party.command.settings.usage=Modifies party settings.
+io.github.zap.party.command.settings.on=on
+io.github.zap.party.command.settings.off=off
+io.github.zap.party.command.settings.set=Set {0} to {1}!
+io.github.zap.party.command.settings.invalidexpirationtime=Invalid invite expiration time!
+io.github.zap.party.command.spy.usage=...
+io.github.zap.party.command.spy.cannotspyself=You don't have permission to do that!
+io.github.zap.party.command.spy.unknownowner=an unknown owner
+io.github.zap.party.command.spy.spying=Now spying on {0}'s party!
+io.github.zap.party.command.spy.notspying=No longer spying on {0}'s party!
+io.github.zap.party.command.transfer.usage=Transfers the party to another member.
+io.github.zap.party.command.transfer.cannottransferself=You cannot transfer the party to yourself.

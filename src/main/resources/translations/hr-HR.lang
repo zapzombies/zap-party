@@ -1,0 +1,80 @@
+io.github.zap.locale=hr-HR 
+
+io.github.zap.party.member.joined={0} se pridružio partiji.
+io.github.zap.party.member.muted={0} je utišan.
+io.github.zap.party.member.unmuted={0} nije više utišan.
+io.github.zap.party.member.left.leaver=Napustio si partiju.
+io.github.zap.party.member.removed.leaver=Izbačen si iz partije.
+io.github.zap.party.member.left.remaining={0} je napustio partiju.
+io.github.zap.party.member.removed.remaining={0} je izbačen iz partije.
+
+io.github.zap.party.muted=Partija je utišana.
+io.github.zap.party.unmuted=Partija nije više utišana.
+
+io.github.zap.party.chat.member.muted=Utišan si u partijinom razgovoru.
+io.github.zap.party.chat.muted=Partijin razgovor je utišan.
+
+io.github.zap.party.chat.prefix.party=Partija
+io.github.zap.party.chat.prefix.rightarrow=>
+io.github.zap.party.chat.message.format={0}{1}
+
+io.github.zap.party.list.online=Online
+io.github.zap.party.list.offline=Offline
+io.github.zap.party.list.invites=Pozivnice
+io.github.zap.party.list.colon=:
+io.github.zap.party.list.prefix.format={0}{1}
+io.github.zap.party.list.format={0} {1}
+
+io.github.zap.party.invite.here=ovdje
+io.github.zap.party.invite.received.personal={0} te je pozvao u svoju partiju! Klikni {1} da se pridružiš! Imaš {2} sekunde da prihvatiš!
+io.github.zap.party.invite.received.other={0} te je pozvao u {1}-ovu partiju! Klikni {2} da se pridružiš! Imaš {3} sekunde da prihvatiš!
+io.github.zap.party.invite.created={0} je pozvao {1} u partiju! Imaju {2} sekunde da prihvate.
+io.github.zap.party.invite.to.expired={0}-ova pozivnica je istekla.
+io.github.zap.party.invite.from.expired=Pozivnica za {0}-ovu partiju je istekla.
+
+io.github.zap.party.kickoffline.newowner={0} je izbačen iz partije. {1} je sada vlasnik.
+io.github.zap.party.kickoffline.kicked.zero=Nijedan offline igrač je bio izbačen iz partije.
+io.github.zap.party.kickoffline.kicked.one=Jedan offline igrač je bio izbačen iz partije.
+io.github.zap.party.kickoffline.kicked.two=Dva offline igrača su bila izbačena iz partije.
+io.github.zap.party.kickoffline.kicked.few={0} offline igrača su bila izbačena iz partije.
+io.github.zap.party.kickoffline.kicked.many={0} offline igrača su bila izbačena iz partije.
+io.github.zap.party.kickoffline.kicked.other={0} offline igrača su bila izbačena iz partije.
+
+io.github.zap.party.disbanded=Partija se raspustila.
+
+io.github.zap.party.transferred=Vlasnik partije se prenio od {0} na {1}.
+
+io.github.zap.party.command.sender.alreadyinparty=Ti još uvijek pripadaš nečijoj partiji.
+io.github.zap.party.command.sender.notinparty=Ti si u ničijoj partiji.
+io.github.zap.party.command.sender.notowner=Nisi vlasnik partije.
+io.github.zap.party.command.notinyourparty={0} nije u tvojoj partiji.
+io.github.zap.party.command.notinparty={0} je u ničijoj partiji.
+io.github.zap.party.command.notonline={0} nije sad online.
+io.github.zap.party.command.notregistered={0} nije registriran na serveru.
+io.github.zap.party.command.create.usage=Stvori partiju.
+io.github.zap.party.command.create.success=Stvorio partiju.
+io.github.zap.party.command.disband.usage=Raspusti partiju.
+io.github.zap.party.command.invite.usage=Pozove igrača u tvoju partiju.
+io.github.zap.party.command.invite.nopermission=Nemaš dozvolu da zoveš druge igrače u partiju!
+io.github.zap.party.command.invite.cannotinviteown=Ne možeš pozvati samog sebe u partiju.
+io.github.zap.party.command.join.usage=Pridruži se partiji.
+io.github.zap.party.command.join.alreadyinparty=Ti si još uvijek u nečijoj partiji! Napusti ju da se pridružiš drugoj.
+io.github.zap.party.command.join.cannotjoinown=Ne možeš se pridružiti svojoj partiji./
+io.github.zap.party.command.join.noinvite=Nemaš pozivnicu za {0}-ovu partiju.
+io.github.zap.party.command.kick.usage=Izbaci člana tvoje partije.
+io.github.zap.party.command.sender.cannotkickself=Ne možeš izbaciti samog sebe.
+io.github.zap.party.command.kickoffline.usage=Izbaci offline članove iz tvoje partije.
+io.github.zap.party.command.leave.usage=Napusti partiju.
+io.github.zap.party.command.list.usage=Navodi sve članove tvoje partije
+io.github.zap.party.command.chat.usage=Uključi/isključi partijin razgovor.
+io.github.zap.party.command.chat.on=Uključio partijin razgovor!
+io.github.zap.party.command.chat.off=Isključio partijin razgovor!
+io.github.zap.party.command.mute.usage=Utiša člana tvoje partije ili cijelu partiju.
+io.github.zap.party.command.mute.cannotmuteself=Ne možeš utišati samog sebe.
+io.github.zap.party.command.settings.usage=Mijenja postavke za partiju.
+io.github.zap.party.command.settings.on=uključeno
+io.github.zap.party.command.settings.off=isključeno
+io.github.zap.party.command.settings.set=Postavi {0} na {1}!
+io.github.zap.party.command.settings.invalidexpirationtime=Loše vrijeme za istjecanje pozivnice!
+io.github.zap.party.command.transfer.usage=Da vlasnik nekom drugome.
+io.github.zap.party.command.transfer.cannottransferself=Ne možeš dati vlasnik samom sebi.

@@ -4,8 +4,10 @@ import io.github.zap.party.Party;
 import io.github.zap.party.member.PartyMember;
 import io.github.zap.party.namer.OfflinePlayerNamer;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -29,20 +31,15 @@ public class TimedInvitationManager implements InvitationManager {
 
     private final Plugin plugin;
 
-    private final MiniMessage miniMessage;
-
     private final OfflinePlayerNamer playerNamer;
 
     /**
      * Creates a basic invitation manager
      * @param plugin The plugin that owns this {@link InvitationManager}
-     * @param miniMessage A {@link MiniMessage} instance to parse messages
      * @param playerNamer A namer for invitation messages
      */
-    public TimedInvitationManager(@NotNull Plugin plugin, @NotNull MiniMessage miniMessage,
-                                  @NotNull OfflinePlayerNamer playerNamer) {
+    public TimedInvitationManager(@NotNull Plugin plugin, @NotNull OfflinePlayerNamer playerNamer) {
         this.plugin = plugin;
-        this.miniMessage = miniMessage;
         this.playerNamer = playerNamer;
     }
 
@@ -72,30 +69,34 @@ public class TimedInvitationManager implements InvitationManager {
         OfflinePlayer partyOwner = ownerOptional.get().getOfflinePlayer();
         Player onlineInvitee = invitee.getPlayer();
 
-        Component inviterComponent = this.playerNamer.name(inviter);
-        Component inviteeComponent = this.playerNamer.name(invitee);
-        Component ownerComponent = this.playerNamer.name(partyOwner);
+        Component inviterComponent = this.playerNamer.name(inviter).colorIfAbsent(NamedTextColor.WHITE);
+        Component inviteeComponent = this.playerNamer.name(invitee).colorIfAbsent(NamedTextColor.WHITE);
+        Component ownerComponent = this.playerNamer.name(partyOwner).colorIfAbsent(NamedTextColor.WHITE);
 
         String ownerName = Objects.toString(partyOwner.getName());
 
         if (onlineInvitee != null) {
-            Template ownerTemplate = Template.of("owner", ownerComponent);
-            onlineInvitee.sendMessage(this.miniMessage.parse(String.format("<inviter> <reset><yellow>has " +
-                            "invited you to join <owner-msg> <reset><yellow>party! Click " +
-                            "<hover:show_text:'<yellow>/party join <reset><owner>'>" +
-                            "<click:run_command:/party join " + ownerName + "><red>here <yellow>to join! " +
-                            "You have %.1f seconds to accept!", expirationTime),
-                    Template.of("inviter", inviterComponent),
-                    (partyOwner.equals(inviter))
-                            ? Template.of("owner-msg", "their")
-                            : Template.of("owner-msg",
-                            this.miniMessage.parse("<reset><owner>'s", ownerTemplate)), ownerTemplate));
+            Component here = Component.translatable("io.github.zap.party.invite.here", NamedTextColor.RED)
+                    .hoverEvent(HoverEvent.showText(TextComponent.ofChildren(
+                            Component.text("/party join ", NamedTextColor.YELLOW),
+                            ownerComponent))
+                    )
+                    .clickEvent(ClickEvent.runCommand("/party join " + ownerName));
+            if (partyOwner.equals(inviter)) {
+                onlineInvitee.sendMessage(Component.translatable("io.github.zap.party.invite.received.personal",
+                        NamedTextColor.YELLOW, inviterComponent, here,
+                        Component.text(String.format("%.1f", expirationTime))));
+            }
+            else {
+                onlineInvitee.sendMessage(Component.translatable("io.github.zap.party.invite.received.other",
+                        NamedTextColor.YELLOW, inviterComponent, ownerComponent, here,
+                        Component.text(String.format("%.1f", expirationTime))));
+            }
         }
 
-        party.broadcastMessage(this.miniMessage.parse(String.format("<inviter> <reset><yellow>has invited " +
-                                "<reset><invitee> <reset><yellow>to the party! They have %.1f seconds to accept.",
-                        expirationTime), Template.of("inviter", inviterComponent),
-                Template.of("invitee", inviteeComponent)));
+        party.broadcastMessage(Component.translatable("io.github.zap.party.invite.created",
+                NamedTextColor.YELLOW, inviterComponent, inviteeComponent,
+                Component.text(String.format("%.1f", expirationTime))));
 
         int taskId = this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
             this.invitationMap.remove(invitee.getUniqueId());
@@ -104,12 +105,13 @@ public class TimedInvitationManager implements InvitationManager {
                 return;
             }
 
-            party.broadcastMessage(this.miniMessage.parse("<yellow>The invite to <reset><invitee> " +
-                    "<reset><yellow>has expired.", Template.of("invitee", inviteeComponent)));
+            party.broadcastMessage(Component.translatable("io.github.zap.party.invite.to.expired",
+                    NamedTextColor.YELLOW, inviteeComponent));
 
-            if (onlineInvitee != null && onlineInvitee.isOnline()) {
-                onlineInvitee.sendMessage(this.miniMessage.parse("<yellow>The invite to <reset><owner>" +
-                        "<reset><yellow>'s party has expired.", Template.of("owner", ownerComponent)));
+            Player newOnlineInvitee = this.plugin.getServer().getPlayer(invitee.getUniqueId());
+            if (newOnlineInvitee != null && newOnlineInvitee.isOnline()) {
+                newOnlineInvitee.sendMessage(Component.translatable("io.github.zap.party.invite.from.expired",
+                        NamedTextColor.YELLOW, ownerComponent));
             }
         }, party.getPartySettings().getInviteExpirationTime()).getTaskId();
         this.invitationMap.put(invitee.getUniqueId(), taskId);
