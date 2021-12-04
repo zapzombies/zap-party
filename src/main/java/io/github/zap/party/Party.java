@@ -393,7 +393,7 @@ public class Party {
         }
 
         this.broadcastMessage(Component.translatable("io.github.zap.party.transferred", NamedTextColor.YELLOW,
-                this.playerNamer.name(member.getOfflinePlayer()).colorIfAbsent(NamedTextColor.WHITE),
+                this.playerNamer.name(this.owner.getOfflinePlayer()).colorIfAbsent(NamedTextColor.WHITE),
                 this.playerNamer.name(player).colorIfAbsent(NamedTextColor.WHITE)));
 
         this.owner = member;
